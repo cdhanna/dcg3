@@ -49,6 +49,7 @@
     <Compile Include="GameLogic\JsonLoader.cs" />
     <Compile Include="GameLogic\KeyboardHelper.cs" />
     <Compile Include="GameLogic\Level.cs" />
+    <Compile Include="GameLogic\Player.cs" />
     <Compile Include="TestGame.cs" />
     <Compile Include="IPrimitiveBatch.cs" />
     <Compile Include="Program.cs" />

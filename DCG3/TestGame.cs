@@ -14,10 +14,11 @@ namespace DCG3
         GraphicsDeviceManager graphics;
 
         private IPrimitiveBatch _pBatch;
-        private KeyboardHelper _kb;
+
 
 
         private Level _level;
+        private Player _plr;
 
         public TestGame()
         {
@@ -32,6 +33,9 @@ namespace DCG3
             var loader = new JsonLoader();
             _level = loader.Load("Content/level.json");
 
+            _plr = new Player();
+            _plr.Position = _level.PlayerStart;
+
             base.Initialize();
         }
 
@@ -39,6 +43,8 @@ namespace DCG3
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
+
+            _plr.Update(gameTime);
 
             base.Update(gameTime);
         }
@@ -51,8 +57,7 @@ namespace DCG3
             _pBatch.Begin(GraphicsDevice);
 
             _level.Draw(_pBatch);
-            //_pBatch.Draw(new Vector3(0, 0, 0), );
-
+            _plr.Draw(_pBatch);
 
             _pBatch.Flush(Matrix.Identity);
 

@@ -9,20 +9,22 @@ namespace DCG3.GameLogic
     class KeyboardHelper
     {
 
-        private KeyboardState _old, _new;
+        private static KeyboardState _old, _new;
 
-        public void Update()
+        private KeyboardHelper() { }
+
+        public static void Update()
         {
             _old = _new;
             _new = Keyboard.GetState();
         }
 
-        public bool IsKeyDown(Keys k)
+        public static bool IsKeyDown(Keys k)
         {
             return _new.IsKeyDown(k);
         }
 
-        public bool IsNewKeydown(Keys k)
+        public static bool IsNewKeydown(Keys k)
         {
             return _new.IsKeyDown(k) && _old.IsKeyUp(k);
         }

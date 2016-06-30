@@ -5,27 +5,30 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
+using OpenTK.Graphics.OpenGL;
 
 namespace DCG3.GameLogic
 {
     class ObjectJSON
     {
-        public float X, Y, Z, Width, Height, Depth, R, G, B;
+
+        public Vector3 Position { get; set; }
+        public Vector3 Size { get; set; }
+        public Vector3 Color { get; set; }
+        //public float X, Y, Z, Width, Height, Depth, R, G, B;
 
         public ObjectJSON()
         {
-            Width = 1;
-            Height = 1;
-            Depth = 1;
-            R = 255;
-            G = 255;
-            B = 255;
+            Position = Vector3.Zero;
+            Size = Vector3.One;
+            Color = Vector3.One;
         }
     }
 
     class LevelJSON
     {
         public List<ObjectJSON> Objects;
+        public Vector3 PlayerStart;
 
         public LevelJSON()
         {
@@ -44,11 +47,12 @@ namespace DCG3.GameLogic
             level.Cubes = json.Objects.Select(o =>
                 new Cube()
                 {
-                    Position = new Vector3(o.X, o.Y, o.Z),
-                    Size = new Vector3(o.Width, o.Height, o.Depth),
-                    Color = new Color(o.R, o.G, o.B)
+                    Position = o.Position,
+                    Size = o.Size,
+                    Color = new Color(o.Color.X, o.Color.Y, o.Color.Z)
                 }
             ).ToList();
+            level.PlayerStart = json.PlayerStart;
 
             return level;
         }
