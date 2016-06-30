@@ -14,7 +14,7 @@ namespace DCG3.GameLogic
 
         public void Draw(IPrimitiveBatch pBatch)
         {
-            pBatch.Draw(Position, Size.X, Size.Y, Size.Y, Color);
+            pBatch.Draw(Position, Size.X, Size.Y, Size.Z, Color);
         }
     }
 }

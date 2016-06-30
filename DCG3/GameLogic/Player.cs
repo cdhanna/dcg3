@@ -22,7 +22,7 @@ namespace DCG3.GameLogic
         {
             Cube = new Cube();
             Cube.Color = Color.Green;
-           
+            Cube.Size = Vector3.One;
         }
 
         public void Update(GameTime time)
