@@ -53,6 +53,7 @@ namespace DCG3
         public void Flush(Matrix viewMatrix)
         {
             allCubes = allCubesList.ToArray();
+            vertexBuffer = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), allCubes.Length, BufferUsage.WriteOnly);
             vertexBuffer.SetData<VertexPositionColor>(allCubes);
 
             basicEffect.Projection = projectionMatrix;
