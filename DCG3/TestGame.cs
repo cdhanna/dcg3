@@ -17,7 +17,7 @@ namespace DCG3
         private KeyboardHelper _kb;
 
 
-        
+        private Level _level;
 
         public TestGame()
         {
@@ -28,6 +28,9 @@ namespace DCG3
         protected override void Initialize()
         {
             _pBatch = new FakePBatch();
+
+            var loader = new JsonLoader();
+            _level = loader.Load("Content/level.json");
 
             base.Initialize();
         }
@@ -45,13 +48,13 @@ namespace DCG3
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            //_pBatch.Begin(GraphicsDevice);
-           
+            _pBatch.Begin(GraphicsDevice);
 
+            _level.Draw(_pBatch);
             //_pBatch.Draw(new Vector3(0, 0, 0), );
 
 
-            //_pBatch.Flush(Matrix.Identity);
+            _pBatch.Flush(Matrix.Identity);
 
             base.Draw(gameTime);
         }

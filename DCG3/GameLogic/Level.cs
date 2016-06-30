@@ -7,6 +7,12 @@ namespace DCG3.GameLogic
 {
     class Level
     {
-        public List<Cube> Cubes { get; set; } 
+        public List<Cube> Cubes { get; set; }
+
+
+        public void Draw(IPrimitiveBatch pBatch)
+        {
+            Cubes.ForEach(c => c.Draw(pBatch));
+        }
     }
 }

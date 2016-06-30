@@ -9,17 +9,17 @@ namespace DCG3
     {
         public void Begin(Microsoft.Xna.Framework.Graphics.GraphicsDevice device)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void Draw(Microsoft.Xna.Framework.Vector3 position, float width, float height, float depth, Microsoft.Xna.Framework.Color color)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public void Flush(Microsoft.Xna.Framework.Matrix viewMatrix)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
     }
 }
