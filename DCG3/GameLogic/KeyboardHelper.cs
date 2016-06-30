@@ -13,11 +13,18 @@ namespace DCG3.GameLogic
 
         public void Update()
         {
-            _new = Keyboard.GetState();
-            
-
-
             _old = _new;
+            _new = Keyboard.GetState();
+        }
+
+        public bool IsKeyDown(Keys k)
+        {
+            return _new.IsKeyDown(k);
+        }
+
+        public bool IsNewKeydown(Keys k)
+        {
+            return _new.IsKeyDown(k) && _old.IsKeyUp(k);
         }
 
     }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using OpenTK.Graphics.ES30;
 
 namespace DCG3.GameLogic
 {
