@@ -50,6 +50,14 @@ namespace DCG3
             allCubesList.AddRange(cubeTriangulated);
         }
 
+        public void Draw(Vector3 position, float width, float height, float depth, Color[] colors)
+        {
+            VertexPositionColor[] cubeVertices = GetCubeVertices(position.X, position.Y, position.Z, width, height, depth, Color.Black);
+            VertexPositionColor[] cubeTriangulated = ConstructCube(cubeVertices, colors);
+
+            allCubesList.AddRange(cubeTriangulated);
+        }
+
         public void Flush(Matrix viewMatrix)
         {
             allCubes = allCubesList.ToArray();
