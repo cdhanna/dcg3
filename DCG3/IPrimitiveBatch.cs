@@ -11,6 +11,7 @@ namespace DCG3
     {
         void Begin(GraphicsDevice device);
         void Draw(Vector3 position, float width, float height, float depth, Color color);
+        void Draw(Vector3 position, float width, float height, float depth, Color[] color);
         void Flush(Matrix viewMatrix);
     }
 }
