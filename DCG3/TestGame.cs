@@ -29,7 +29,7 @@ namespace DCG3
 
         protected override void Initialize()
         {
-            _pBatch = new FakePBatch();
+            _pBatch = new FakePBatch(graphics, GraphicsDevice);
             var loader = new JsonLoader();
             _level = loader.Load("Content/level.json");
 
