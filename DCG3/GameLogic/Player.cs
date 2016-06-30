@@ -29,7 +29,7 @@ namespace DCG3.GameLogic
         {
 
             var acceleration = Vector3.Zero;
-            var speed = 1f;
+            var speed = .1f;
 
             if (KeyboardHelper.IsKeyDown(Keys.Left))
             {
@@ -52,7 +52,7 @@ namespace DCG3.GameLogic
             }
 
             Velocity += acceleration;
-            Velocity -= Velocity*.1f;
+            Velocity -= Velocity*.2f;
 
             Position += Velocity;
 
