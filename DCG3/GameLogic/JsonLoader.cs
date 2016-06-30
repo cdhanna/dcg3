@@ -29,10 +29,13 @@ namespace DCG3.GameLogic
     {
         public List<ObjectJSON> Objects;
         public Vector3 PlayerStart;
+        public Vector3 CameraStart;
 
         public LevelJSON()
         {
             Objects = new List<ObjectJSON>();
+            PlayerStart = Vector3.Zero;
+            CameraStart = new Vector3(0, 5, -5);
         }
     }
 
@@ -53,6 +56,7 @@ namespace DCG3.GameLogic
                 }
             ).ToList();
             level.PlayerStart = json.PlayerStart;
+            level.CameraStart = json.CameraStart;
 
             return level;
         }

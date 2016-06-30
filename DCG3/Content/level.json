@@ -1,5 +1,6 @@
 ﻿{
 	"PlayerStart": "0,1,0",
+	"CameraStart": "0,4, -4",
 	"Objects": [
 
 		{	// FLOOR _________________

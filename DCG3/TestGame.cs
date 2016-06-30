@@ -19,6 +19,7 @@ namespace DCG3
 
         private Level _level;
         private Player _plr;
+        private SimpleCamera _cam;
 
         public TestGame()
         {
@@ -29,12 +30,14 @@ namespace DCG3
         protected override void Initialize()
         {
             _pBatch = new FakePBatch();
-
             var loader = new JsonLoader();
             _level = loader.Load("Content/level.json");
 
             _plr = new Player();
             _plr.Position = _level.PlayerStart;
+
+            _cam = new SimpleCamera();
+            _cam.Position = _level.CameraStart;
 
             base.Initialize();
         }
@@ -45,6 +48,7 @@ namespace DCG3
                 Exit();
 
             _plr.Update(gameTime);
+            _cam.Target = _plr.Position;
 
             base.Update(gameTime);
         }
@@ -59,7 +63,7 @@ namespace DCG3
             _level.Draw(_pBatch);
             _plr.Draw(_pBatch);
 
-            _pBatch.Flush(Matrix.Identity);
+            _pBatch.Flush(_cam.GetView());
 
             base.Draw(gameTime);
         }
