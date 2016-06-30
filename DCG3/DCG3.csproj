@@ -38,7 +38,11 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Game1.cs" />
+    <Compile Include="FakePBatch.cs" />
+    <Compile Include="GameLogic\Cube.cs" />
+    <Compile Include="GameLogic\KeyboardHelper.cs" />
+    <Compile Include="TestGame.cs" />
+    <Compile Include="IPrimitiveBatch.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

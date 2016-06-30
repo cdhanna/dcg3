@@ -10,7 +10,8 @@ namespace DCG3
     public class TestGame : Game
     {
         GraphicsDeviceManager graphics;
-        SpriteBatch spriteBatch;
+
+        private IPrimitiveBatch pBatch;
 
         public TestGame()
         {
@@ -28,28 +29,9 @@ namespace DCG3
         {
             // TODO: Add your initialization logic here
 
+            pBatch = new FakePBatch();
+
             base.Initialize();
-        }
-
-        /// <summary>
-        /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
-        /// </summary>
-        protected override void LoadContent()
-        {
-            // Create a new SpriteBatch, which can be used to draw textures.
-            spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            // TODO: use this.Content to load your game content here
-        }
-
-        /// <summary>
-        /// UnloadContent will be called once per game and is the place to unload
-        /// game-specific content.
-        /// </summary>
-        protected override void UnloadContent()
-        {
-            // TODO: Unload any non ContentManager content here
         }
 
         /// <summary>
@@ -75,7 +57,11 @@ namespace DCG3
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            // TODO: Add your drawing code here
+            pBatch.Begin(GraphicsDevice);
+           
+
+
+            pBatch.Flush(Matrix.Identity);
 
             base.Draw(gameTime);
         }
