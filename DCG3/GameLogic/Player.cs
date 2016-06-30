@@ -33,12 +33,12 @@ namespace DCG3.GameLogic
 
             if (KeyboardHelper.IsKeyDown(Keys.Left))
             {
-                acceleration -= Vector3.UnitX*speed;
+                acceleration += Vector3.UnitX*speed;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.Right))
             {
-                acceleration += Vector3.UnitX*speed;
+                acceleration -= Vector3.UnitX*speed;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.Up))
