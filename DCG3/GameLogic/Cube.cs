@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using ThreeD;
 
 namespace DCG3.GameLogic
 {
@@ -14,16 +15,7 @@ namespace DCG3.GameLogic
 
         public void Draw(IPrimitiveBatch pBatch)
         {
-            pBatch.Draw(Position, Size.X, Size.Y, Size.Z, new Color[]
-            {
-                Color,
-                Color,
-                Color,
-                Color,
-                Color.Orange,
-                
-                Color
-            });
+            pBatch.Draw(Position, Size.X, Size.Y, Size.Z, Color);
         }
     }
 }

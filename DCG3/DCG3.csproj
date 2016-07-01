@@ -44,7 +44,6 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="FakePBatch.cs" />
     <Compile Include="GameLogic\Cube.cs" />
     <Compile Include="GameLogic\JsonLoader.cs" />
     <Compile Include="GameLogic\KeyboardHelper.cs" />
@@ -52,7 +51,6 @@
     <Compile Include="GameLogic\Player.cs" />
     <Compile Include="GameLogic\SimpleCamera.cs" />
     <Compile Include="TestGame.cs" />
-    <Compile Include="IPrimitiveBatch.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -84,6 +82,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ThreeD\ThreeD.csproj">
+      <Project>{32bd0d8f-160b-44a8-8d76-8fc292475249}</Project>
+      <Name>ThreeD</Name>
+    </ProjectReference>
   </ItemGroup>
   <!-- Specify the search path explicitly so the ResolveAssemblyReferences task picks the right ones -->
   <Target Name="BeforeResolveReferences">

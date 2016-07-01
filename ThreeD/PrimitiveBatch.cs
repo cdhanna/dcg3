@@ -1,11 +1,14 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
-namespace DCG3
+namespace ThreeD
 {
-    class FakePBatch : IPrimitiveBatch
+    public class PrimitiveBatch : IPrimitiveBatch
     {
         Matrix projectionMatrix; // camera's lens
         Matrix worldMatrix;      // object's position
@@ -20,7 +23,7 @@ namespace DCG3
 
         BasicEffect basicEffect;
 
-        public FakePBatch(GraphicsDeviceManager graphics, GraphicsDevice graphicsDevice)
+        public PrimitiveBatch(GraphicsDeviceManager graphics, GraphicsDevice graphicsDevice)
         {
             Graphics = graphics;
             GraphicsDevice = graphicsDevice;
@@ -37,7 +40,7 @@ namespace DCG3
             basicEffect.LightingEnabled = false;
         }
 
-        public void Begin(GraphicsDevice device)
+        public void Begin()
         {
             allCubesList = new List<VertexPositionColor>();
         }
@@ -230,5 +233,6 @@ namespace DCG3
 
             return cubeTriangulated;
         }
+
     }
 }

@@ -3,6 +3,7 @@ using DCG3.GameLogic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using ThreeD;
 
 namespace DCG3
 {
@@ -29,7 +30,7 @@ namespace DCG3
 
         protected override void Initialize()
         {
-            _pBatch = new FakePBatch(graphics, GraphicsDevice);
+            _pBatch = new PrimitiveBatch(graphics, GraphicsDevice);
             var loader = new JsonLoader();
             _level = loader.Load("Content/level.json");
 
@@ -60,7 +61,7 @@ namespace DCG3
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
-            _pBatch.Begin(GraphicsDevice);
+            _pBatch.Begin();
 
             _level.Draw(_pBatch);
             _plr.Draw(_pBatch);
