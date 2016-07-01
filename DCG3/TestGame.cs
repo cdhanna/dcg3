@@ -30,7 +30,7 @@ namespace DCG3
 
         protected override void Initialize()
         {
-            _pBatch = new PrimitiveBatch(graphics, GraphicsDevice);
+            _pBatch = new PrimitiveBatch(GraphicsDevice);
             var loader = new JsonLoader();
             _level = loader.Load("Content/level.json");
 

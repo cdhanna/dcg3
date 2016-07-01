@@ -18,14 +18,12 @@ namespace ThreeD
         VertexPositionColor[] colorCubeVertices;
         List<VertexPositionColor> allCubesList;
 
-        GraphicsDeviceManager Graphics;
         GraphicsDevice GraphicsDevice;
 
         BasicEffect basicEffect;
 
-        public PrimitiveBatch(GraphicsDeviceManager graphics, GraphicsDevice graphicsDevice)
+        public PrimitiveBatch( GraphicsDevice graphicsDevice)
         {
-            Graphics = graphics;
             GraphicsDevice = graphicsDevice;
 
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
