@@ -47,6 +47,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IPrimitiveBatch.cs" />
+    <Compile Include="Menu\Components\DataList.cs" />
+    <Compile Include="Menu\Components\DataLabel.cs" />
+    <Compile Include="Menu\Components\List.cs" />
+    <Compile Include="Menu\MenuComponent.cs" />
+    <Compile Include="Menu\MenuComposer.cs" />
+    <Compile Include="Menu\MenuRenderer.cs" />
+    <Compile Include="Menu\MenuSystem.cs" />
     <Compile Include="PrimitiveBatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

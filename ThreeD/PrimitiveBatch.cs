@@ -69,7 +69,8 @@ namespace ThreeD
             basicEffect.View = viewMatrix;
             basicEffect.World = worldMatrix;
 
-            GraphicsDevice.Clear(Color.White);
+            //GraphicsDevice.Clear(Color.White);
+            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
             GraphicsDevice.SetVertexBuffer(vertexBuffer);
 
