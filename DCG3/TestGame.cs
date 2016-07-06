@@ -83,6 +83,7 @@ namespace DCG3
             _plr.Update(gameTime);
             _cam.Target = _plr.Position;
 
+            _cam.Update();
 
             KeyboardHelper.Update();
             base.Update(gameTime);
