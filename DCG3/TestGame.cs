@@ -62,7 +62,6 @@ namespace DCG3
 
                 m => m.Label("Menu Test")
                     .Add(),
-
                 m => m.DataList( 
                     m.KeyValue("Player X", () => _plr.Position.X.ToString()), 
                     m.KeyValue("Player Z", () => _plr.Position.Z.ToString()))

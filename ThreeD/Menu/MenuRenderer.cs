@@ -143,7 +143,8 @@ namespace ThreeD.Menu
 
             DrawBoxBorder(ToPixel(origin), ToPixel(origin + size), self.BorderColor, self.Background);
 
-            _spriteBatch.DrawString(_font, self.Text, ToPixel(origin + centerOffset) + textPadding,self.Color);
+            _spriteBatch.DrawString(_font, self.Text, ToPixel(origin + centerOffset) + textPadding, self.Color);
+            
         }
 
         public Vector2 Size(MenuComponent component, Vector2 offset, Vector2 scale)
