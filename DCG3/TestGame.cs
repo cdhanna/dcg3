@@ -199,6 +199,7 @@ namespace DCG3
 
             _cam.Position = new Vector3(_camRadius * (float)Math.Cos(_camAngle), _cam.Position.Y, _camRadius * (float)Math.Sin(_camAngle));
 
+            _cam.Update();
 
             KeyboardHelper.Update();
             base.Update(gameTime);
