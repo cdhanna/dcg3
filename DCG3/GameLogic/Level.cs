@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using ThreeD;
+using ThreeD.PrimtiveBatch;
 
 namespace DCG3.GameLogic
 {
@@ -23,6 +24,7 @@ namespace DCG3.GameLogic
         public void Draw(IPrimitiveBatch pBatch)
         {
             Cubes.ForEach(c => c.Draw(pBatch));
+
         }
     }
 }

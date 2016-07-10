@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using Newtonsoft.Json;
 using OpenTK.Graphics.OpenGL;
 
@@ -15,6 +17,7 @@ namespace DCG3.GameLogic
         public Vector3 Position { get; set; }
         public Vector3 Size { get; set; }
         public Vector3 Color { get; set; }
+        public string Texture { get; set; }
         //public float X, Y, Z, Width, Height, Depth, R, G, B;
 
         public ObjectJSON()
@@ -22,6 +25,7 @@ namespace DCG3.GameLogic
             Position = Vector3.Zero;
             Size = Vector3.One;
             Color = Vector3.One;
+            Texture = null;
         }
     }
 
@@ -42,7 +46,7 @@ namespace DCG3.GameLogic
     class JsonLoader
     {
 
-        public Level Load(string levelPath)
+        public Level Load(string levelPath, ContentManager content)
         {
             var level = new Level();
 
@@ -52,7 +56,8 @@ namespace DCG3.GameLogic
                 {
                     Position = o.Position,
                     Size = o.Size,
-                    Color = new Color(o.Color.X, o.Color.Y, o.Color.Z)
+                    Color = new Color(o.Color.X, o.Color.Y, o.Color.Z),
+                    Texture = o.Texture == null ? null : content.Load<Texture2D>(o.Texture)
                 }
             ).ToList();
             level.PlayerStart = json.PlayerStart;

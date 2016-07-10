@@ -6,20 +6,25 @@
 		{	// FLOOR _________________
 			"Position": "0, 0, 0",
 			"Size": "10, 1, 10",
-			"Color": ".5, .5, .5"
+			"Color": ".5, .5, .5",
+			
+			"Texture": "floor"
 		},
 
 
 		{	// WALL _________________
-			"Position": "5.5, 4.5, 0",
+			"Position": "6, 5, 0",
 			"Size": "1, 10, 10",
-			"Color": ".7, .3, .2"
+			"Color": ".7, .3, .2",
+			"Texture": "brick"
 		},
 
 		{	// WALL _________________
-			"Position": "-5.5, 4.5, 0",
+			"Position": "-6, 4, 0",
 			"Size": "1, 10, 10",
-			"Color": ".2, .3, .7"
+			"Color": ".2, .3, .7",
+			
+			"Texture": "brick"
 		},
 	]
 }

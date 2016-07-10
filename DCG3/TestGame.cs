@@ -8,9 +8,15 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using ThreeD;
 using ThreeD.Menu;
+using ThreeD.PrimtiveBatch;
 
 namespace DCG3
 {
+
+    struct CubeMeta
+    {
+        public float YSpeed, AngleSpeed;
+    }
     /// <summary>
     /// This is the main type for your game.
     /// </summary>
@@ -18,13 +24,26 @@ namespace DCG3
     {
         GraphicsDeviceManager graphics;
 
-        private IPrimitiveBatch _pBatch;
+        private PrimitiveBatch _pBatch;
 
         public MenuSystem _menuSystem;
 
-        private Level _level;
-        private Player _plr;
         private SimpleCamera _cam;
+        private float _camAngle, _camRadius;
+
+        private Texture2D _texAgu, _texNuke, _texC, _texAguStrip;
+        private bool _isRunningSlowly;
+
+        private Random _rand;
+        private List<Cube> _cubes;
+
+
+        int frameRate = 0;
+        int frameCounter = 0;
+        TimeSpan elapsedTime = TimeSpan.Zero;
+       
+
+        private Dictionary<Cube, CubeMeta> _cubeMetas; 
 
         public TestGame()
         {
@@ -35,53 +54,150 @@ namespace DCG3
         protected override void Initialize()
         {
             _pBatch = new PrimitiveBatch(GraphicsDevice);
-            var loader = new JsonLoader();
-            _level = loader.Load("Content/level.json");
-
-            _plr = new Player();
-            _plr.Position = _level.PlayerStart;
-
             _cam = new SimpleCamera();
-            _cam.Position = _level.CameraStart;
-
 
             var font = Content.Load<SpriteFont>("basic");
             _menuSystem = new MenuSystem(GraphicsDevice, font);
 
-            var label = new MenuLabel();
-            label.Text = "Hello world";
-            label.Color = Color.White;
-            label.Position = new Vector2(.01f, .03f);
-            label.MinSize = new Vector2(.96f, 0);
-            label.Background = new Color(0, 0, 0, .7f);
-            label.BorderColor = Color.White;
-
-           
+            _texAgu = Content.Load<Texture2D>("agu");
+            _texAguStrip = Content.Load<Texture2D>("agustrip");
+            _texNuke = Content.Load<Texture2D>("nuke");
+            _texC = Content.Load<Texture2D>("C");
 
             _menuSystem.Set(
-
-                m => m.Label("Menu Test")
+                m => m.Label("Batching Test")
                     .Add(),
-
-                m => m.DataList( 
-                    m.KeyValue("Player X", () => _plr.Position.X.ToString()), 
-                    m.KeyValue("Player Z", () => _plr.Position.Z.ToString()))
+                m => m.DataList(
+                    m.KeyValue("FPS", () => frameRate.ToString()),
+                    m.KeyValue("Vertex Count", () => _pBatch.TotalVertexCount.ToString()),
+                    m.KeyValue("Batch Count", () => _pBatch.BatchCount.ToString()))
                     .Add(),
-
-                m => m.Do(b => b.Width(.3f))
+                m => m.Do(b => b.Width(.3f)).Do(b => b.X(.7f)).Do(b => b.Height(.5f))
                 );
 
+            
+            _cam.Target = Vector3.Zero;
+            _camRadius = 10;
+            _camAngle = 0;
+
+            _rand = new Random();
+            
+            _cubeMetas = new Dictionary<Cube, CubeMeta>();
+            _cubes = new List<Cube>();
+            for (var i = 0; i < 2000; i++)
+            {
+                var c = new Cube();
+                c.Texture = _texAgu;
+                c.Position = new Vector3(RandomFloat(-7, 7), RandomFloat(-300, 0), RandomFloat(-7, 7));
+                c.Rotation = new Rotation(RandomUnit(), RandomFloat(0, MathHelper.Pi));
+                c.Size = new Vector3(RandomFloat(1, 2), RandomFloat(1, 2), RandomFloat(1, 2)) * .5f;
+                if (RandomCheck())
+                {
+
+
+                    if (RandomCheck())
+                        c.Texture = _texNuke;
+
+                    if (RandomCheck())
+                    {
+                        //c.UV = new Vector2((int) RandomFloat(1, 4), 1);
+
+                    }
+                }
+                else
+                {
+                    //c.Texture = _texAguStrip;
+                    //c.TextureStyle = TextureStyle.Wrap;
+                }
+
+                var meta = new CubeMeta();
+                meta.AngleSpeed = RandomFloat(-.05f, .05f);
+                meta.YSpeed = RandomFloat(.02f, .05f);
+                _cubeMetas.Add(c, meta);
+                _cubes.Add(c);
+            }
+
+
+            GraphicsDevice.DeviceLost += (o, a) =>
+            {
+                Console.WriteLine("Oh Fuck");
+            };
 
             base.Initialize();
         }
+
+        private bool RandomCheck()
+        {
+            return _rand.Next()%2 == 0;
+        }
+
+        private float RandomFloat(float min, float max)
+        {
+            var x = min + (_rand.NextDouble()*(max - min));
+            return (float) x;
+        }
+
+        private Vector3 RandomUnit()
+        {
+            var theta = RandomFloat(0, MathHelper.TwoPi);
+            var z = RandomFloat(-1, 1);
+
+            var z2 = Math.Sqrt(1 - z*z);
+            var v = new Vector3((float) (z2*Math.Cos(theta)), (float) (z2*Math.Sign(theta)), z);
+            v.Normalize();
+            return v;
+        }
+        
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            _plr.Update(gameTime);
-            _cam.Target = _plr.Position;
+
+            elapsedTime += gameTime.ElapsedGameTime;
+
+            if (elapsedTime > TimeSpan.FromSeconds(1))
+            {
+                elapsedTime -= TimeSpan.FromSeconds(1);
+                frameRate = frameCounter;
+                frameCounter = 0;
+            }
+
+
+            _cubes.ForEach(c =>
+            {
+                c.Rotation = new Rotation(c.Rotation.Axis, c.Rotation.Radians + _cubeMetas[c].AngleSpeed);
+                c.Position -= Vector3.UnitY * _cubeMetas[c].YSpeed;
+
+                if (c.Position.Y < -300)
+                {
+                    c.Position *= new Vector3(1, 0, 1);
+                }
+            });
+
+            _isRunningSlowly = gameTime.IsRunningSlowly;
+
+
+            float camSpeed = .2f;
+            if (KeyboardHelper.IsKeyDown(Keys.A))
+                _camAngle -= .01f;
+            if (KeyboardHelper.IsKeyDown(Keys.D))
+                _camAngle += .01f;
+
+            if (KeyboardHelper.IsKeyDown(Keys.Q))
+                _camRadius -= .1f;
+            if (KeyboardHelper.IsKeyDown(Keys.E))
+                _camRadius += .1f;
+
+    
+            if (KeyboardHelper.IsKeyDown(Keys.W))
+                _cam.Pan(Vector3.UnitY * camSpeed);
+            if (KeyboardHelper.IsKeyDown(Keys.S))
+                _cam.Pan(Vector3.UnitY * -camSpeed);
+
+
+            _cam.Position = new Vector3(_camRadius * (float)Math.Cos(_camAngle), _cam.Position.Y, _camRadius * (float)Math.Sin(_camAngle));
 
 
             KeyboardHelper.Update();
@@ -91,12 +207,19 @@ namespace DCG3
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            frameCounter++;
+            GraphicsDevice.Clear(Color.Black);
 
             _pBatch.Begin();
+            //_cubes.Where(c => c.Position.Y > _cam.Position.Y).toli(c => c.Draw(_pBatch));
 
-            _level.Draw(_pBatch);
-            _plr.Draw(_pBatch);
+            foreach (var c in _cubes)
+            {
+                //if (c.Position.Y > _cam.Position.Y * _camRadius)
+                    c.Draw(_pBatch);
+            }
+
+            //_pBatch.Cube(Vector3.Zero, Vector3.One, Rotation.None, Color.Red, _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
             _pBatch.Flush(_cam.GetView());
 

@@ -23,5 +23,11 @@ namespace DCG3.GameLogic
             return Matrix.CreateLookAt(Position, Target, Vector3.UnitY);
         }
 
+        public void Pan(Vector3 translate)
+        {
+            Position += translate;
+            Target += translate;
+        }
+
     }
 }

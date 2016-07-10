@@ -34,7 +34,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework, Version=3.5.1.1679, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\MonoGame.Framework.WindowsDX.3.5.1.1679\lib\net40\MonoGame.Framework.dll</HintPath>
+      <HintPath>..\packages\MonoGame.Framework.DesktopGL.3.5.1.1679\lib\net40\MonoGame.Framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NVorbis, Version=0.8.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.DesktopGL.3.5.1.1679\lib\net40\NVorbis.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="OpenTK, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+      <HintPath>..\packages\MonoGame.Framework.DesktopGL.3.5.1.1679\lib\net40\OpenTK.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -46,7 +54,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IPrimitiveBatch.cs" />
+    <Compile Include="CustomVertexDecleration.cs" />
+    <Compile Include="FPSTracker.cs" />
+    <Compile Include="PrimtiveBatch\IPrimitiveBatch.cs" />
     <Compile Include="Menu\Components\DataList.cs" />
     <Compile Include="Menu\Components\DataLabel.cs" />
     <Compile Include="Menu\Components\List.cs" />
@@ -54,8 +64,11 @@
     <Compile Include="Menu\MenuComposer.cs" />
     <Compile Include="Menu\MenuRenderer.cs" />
     <Compile Include="Menu\MenuSystem.cs" />
-    <Compile Include="PrimitiveBatch.cs" />
+    <Compile Include="PrimtiveBatch\Batch.cs" />
+    <Compile Include="PrimtiveBatch\PrimitiveBatch.cs" />
+    <Compile Include="PrimtiveBatch\TextureAtlas.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Rotation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
