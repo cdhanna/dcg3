@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ThreeD
 {
-    internal struct CustomVertexDeclaration : IVertexType
+    internal struct VertexPositionColorNormalTexture : IVertexType
     {
         public Vector3 Position;
         public Vector3 Normal;
@@ -23,7 +23,7 @@ namespace ThreeD
                 new VertexElement(sizeof(float) * 6 + sizeof(byte) * 4, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0)
                 );
 
-        public CustomVertexDeclaration(Vector3 pos, Color color, Vector2 tex, Vector3 normal)
+        public VertexPositionColorNormalTexture(Vector3 pos, Color color, Vector2 tex, Vector3 normal)
         {
             Position = pos;
             Color = color;
@@ -39,26 +39,26 @@ namespace ThreeD
 
     internal static class CustomVertexFunctions
     {
-        internal static List<CustomVertexDeclaration> Concat(this List<CustomVertexDeclaration> self,
-            List<CustomVertexDeclaration> other )
+        internal static List<VertexPositionColorNormalTexture> Concat(this List<VertexPositionColorNormalTexture> self,
+            List<VertexPositionColorNormalTexture> other )
         {
-            var list = new List<CustomVertexDeclaration>();
+            var list = new List<VertexPositionColorNormalTexture>();
             list.AddRange(self);
             list.AddRange(other);
             return list;
 
         }
 
-        internal static List<CustomVertexDeclaration> SetCapacity(this List<CustomVertexDeclaration> self, int capacity)
+        internal static List<VertexPositionColorNormalTexture> SetCapacity(this List<VertexPositionColorNormalTexture> self, int capacity)
         {
             self.Capacity = capacity;
             return self;
         } 
 
-        internal static List<CustomVertexDeclaration> Color(this List<CustomVertexDeclaration> self,
+        internal static List<VertexPositionColorNormalTexture> Color(this List<VertexPositionColorNormalTexture> self,
             Color color)
         {
-            return self.Select(v => new CustomVertexDeclaration(
+            return self.Select(v => new VertexPositionColorNormalTexture(
                 v.Position,
                 color,
                 v.TextureCoordinate,
@@ -67,10 +67,10 @@ namespace ThreeD
         }
 
 
-        internal static List<CustomVertexDeclaration> Translate(this List<CustomVertexDeclaration> self,
+        internal static List<VertexPositionColorNormalTexture> Translate(this List<VertexPositionColorNormalTexture> self,
             Vector3 translate)
         {
-            return self.Select(v => new CustomVertexDeclaration(
+            return self.Select(v => new VertexPositionColorNormalTexture(
                 v.Position + translate,
                 v.Color,
                 v.TextureCoordinate,
@@ -78,10 +78,10 @@ namespace ThreeD
 
         }
 
-        internal static List<CustomVertexDeclaration> Scale(this List<CustomVertexDeclaration> self,
+        internal static List<VertexPositionColorNormalTexture> Scale(this List<VertexPositionColorNormalTexture> self,
             Vector3 scale)
         {
-            return self.Select(v => new CustomVertexDeclaration(
+            return self.Select(v => new VertexPositionColorNormalTexture(
                 new Vector3(v.Position.X * scale.X, v.Position.Y * scale.Y, v.Position.Z * scale.Z), 
                 v.Color,
                 v.TextureCoordinate,
@@ -89,12 +89,12 @@ namespace ThreeD
 
         }
 
-        internal static List<CustomVertexDeclaration> Rotate(this List<CustomVertexDeclaration> self,
+        internal static List<VertexPositionColorNormalTexture> Rotate(this List<VertexPositionColorNormalTexture> self,
             Vector3 axis, float radians)
         {
             var rotationMatrix = Matrix.CreateFromAxisAngle(axis, radians);
             
-            return self.Select(v => new CustomVertexDeclaration(
+            return self.Select(v => new VertexPositionColorNormalTexture(
                 Vector3.Transform(v.Position, rotationMatrix),
                 v.Color,
                 v.TextureCoordinate,

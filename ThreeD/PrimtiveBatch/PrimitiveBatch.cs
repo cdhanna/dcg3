@@ -118,9 +118,6 @@ namespace ThreeD.PrimtiveBatch
             if (samplerState == null)
                 samplerState = SamplerState.LinearClamp;
 
-            if (textureStyle == null)
-                textureStyle = TextureStyle.Wrap;
-
             Batch batch = null;
             if (samplerState.Equals(SamplerState.LinearClamp))
             {
@@ -154,6 +151,11 @@ namespace ThreeD.PrimtiveBatch
             _device.RasterizerState = RasterizerState.CullCounterClockwise;
 
 
+            _effect.DirectionalLight2.Enabled = true;
+            _effect.DirectionalLight2.Direction = new Vector3(1, 0, 0);
+            _effect.DirectionalLight2.DiffuseColor = new Vector3(1, 0, 0);
+            _effect.DirectionalLight2.SpecularColor = new Vector3(0, 1, 0);
+
             _batchColl.GetAll().ForEach(batch =>
             {
 
@@ -168,7 +170,7 @@ namespace ThreeD.PrimtiveBatch
                     _device.SamplerStates[0] = SamplerState.PointWrap;
                 }
 
-                var vBuffer = new VertexBuffer(_device, typeof(CustomVertexDeclaration), batch.Verticies.Count, BufferUsage.WriteOnly);
+                var vBuffer = new VertexBuffer(_device, typeof(VertexPositionColorNormalTexture), batch.Verticies.Count, BufferUsage.WriteOnly);
                 vBuffer.SetData(batch.Verticies.ToArray());
 
                 var iBuffer = new IndexBuffer(_device, typeof(short), batch.Indicies.Count, BufferUsage.WriteOnly);
@@ -199,7 +201,7 @@ namespace ThreeD.PrimtiveBatch
             return _batchColl.Get(conf);
         }
 
-        private void ApplyTexture(List<CustomVertexDeclaration> verts, TextureStyle style, Vector2 scale, Texture2D texture, bool inAtlas)
+        private void ApplyTexture(List<VertexPositionColorNormalTexture> verts, TextureStyle style, Vector2 scale, Texture2D texture, bool inAtlas)
         {
             var transformUV = new Func<Vector2, Vector2>(v => v * scale); // this is the 'wrap' version, where the atlas isn't being used.
 
@@ -228,7 +230,7 @@ namespace ThreeD.PrimtiveBatch
                     }
 
                     var vert = verts[i + start];
-                    verts[i + start] = new CustomVertexDeclaration(
+                    verts[i + start] = new VertexPositionColorNormalTexture(
                         vert.Position,
                         vert.Color,
                         transformUV(new Vector2(x, y)),
@@ -253,12 +255,12 @@ namespace ThreeD.PrimtiveBatch
         }
 
         private static readonly VerticiesAndIndicies UnitQuad =
-            new VerticiesAndIndicies(new CustomVertexDeclaration[]
+            new VerticiesAndIndicies(new VertexPositionColorNormalTexture[]
             {
-                new CustomVertexDeclaration(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new CustomVertexDeclaration(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new CustomVertexDeclaration(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new CustomVertexDeclaration(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
+                new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, 1)), 
+                new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, 1)), 
+                new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, 1)), 
+                new VertexPositionColorNormalTexture(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, 1)), 
             }.ToList().Translate(new Vector3(-.5f, -.5f, 0)),
             new short[]
             {
@@ -267,7 +269,7 @@ namespace ThreeD.PrimtiveBatch
 
 
         private static readonly VerticiesAndIndicies UnitCube =
-            new VerticiesAndIndicies(new CustomVertexDeclaration[]
+            new VerticiesAndIndicies(new VertexPositionColorNormalTexture[]
             {
                 
             }.ToList()
@@ -292,9 +294,9 @@ namespace ThreeD.PrimtiveBatch
             }.ToList());
 
 
-        //private List<CustomVertexDeclaration> UnitCube()
+        //private List<VertexPositionColorNormalTexture> UnitCube()
         //{
-        //    var cube = new List<CustomVertexDeclaration>();
+        //    var cube = new List<VertexPositionColorNormalTexture>();
 
         //    return cube;
         //}

@@ -100,7 +100,7 @@ namespace DCG3
 
                     if (RandomCheck())
                     {
-                        //c.UV = new Vector2((int) RandomFloat(1, 4), 1);
+                        c.UV = new Vector2(2,3);
 
                     }
                 }

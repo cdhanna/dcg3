@@ -98,16 +98,17 @@ namespace ThreeD.PrimtiveBatch
 
     internal class VerticiesAndIndicies
     {
-        public List<CustomVertexDeclaration> Verticies { get; set; }
+        public List<VertexPositionColorNormalTexture> Verticies { get; set; }
         public List<short> Indices { get; set; }
 
         public VerticiesAndIndicies()
         {
-            Verticies = new List<CustomVertexDeclaration>();
+            Verticies = new List<VertexPositionColorNormalTexture>();
             Indices = new List<short>();
+
         }
 
-        public VerticiesAndIndicies(List<CustomVertexDeclaration> verts, List<short> inds)
+        public VerticiesAndIndicies(List<VertexPositionColorNormalTexture> verts, List<short> inds)
         {
             Verticies = verts;
             Indices = inds;

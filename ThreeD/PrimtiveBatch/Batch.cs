@@ -86,13 +86,13 @@ namespace ThreeD.PrimtiveBatch
     {
         public BatchConfig Config { get; set; }
 
-        public List<CustomVertexDeclaration> Verticies { get; set; }
+        public List<VertexPositionColorNormalTexture> Verticies { get; set; }
         public List<short> Indicies { get; set; }
 
         public Batch(BatchConfig config)
         {
             Config = config;
-            Verticies = new List<CustomVertexDeclaration>();
+            Verticies = new List<VertexPositionColorNormalTexture>();
             Indicies = new List<short>();
         }
 
