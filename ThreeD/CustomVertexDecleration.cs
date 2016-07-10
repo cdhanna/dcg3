@@ -58,6 +58,8 @@ namespace ThreeD
         internal static List<VertexPositionColorNormalTexture> Color(this List<VertexPositionColorNormalTexture> self,
             Color color)
         {
+
+
             return self.Select(v => new VertexPositionColorNormalTexture(
                 v.Position,
                 color,
@@ -101,5 +103,21 @@ namespace ThreeD
                  Vector3.Transform(v.Normal, rotationMatrix))).ToList();
 
         }
+
+        internal static List<VertexPositionColorNormalTexture> ScaleRotateTranslateColor(this List<VertexPositionColorNormalTexture> self,
+            Vector3 translate, Vector3 scale, Vector3 axis, float radians, Color color)
+        {
+            var rotationMatrix = Matrix.CreateFromAxisAngle(axis, radians);
+
+            return self.Select(v => new VertexPositionColorNormalTexture(
+                Vector3.Transform(v.Position * scale, rotationMatrix) + translate,
+                color,
+                v.TextureCoordinate,
+                 Vector3.Transform(v.Normal, rotationMatrix))).ToList();
+
+        }
+
+
+
     }
 }

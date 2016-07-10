@@ -89,11 +89,17 @@ namespace ThreeD.PrimtiveBatch
         public List<VertexPositionColorNormalTexture> Verticies { get; set; }
         public List<short> Indicies { get; set; }
 
+        private GraphicsDevice _device;
+        private VertexBuffer _vbo;
+        private IndexBuffer _ibo;
+
         public Batch(BatchConfig config)
         {
+            
             Config = config;
             Verticies = new List<VertexPositionColorNormalTexture>();
             Indicies = new List<short>();
+
         }
 
         public void Add(VerticiesAndIndicies vai)
@@ -102,6 +108,9 @@ namespace ThreeD.PrimtiveBatch
             Verticies.AddRange(vai.Verticies);
             vai.Indices.ForEach(i => Indicies.Add( (short)(i + start) ));
         }
+
+
+
 
         
 

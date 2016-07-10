@@ -36,7 +36,7 @@ namespace DCG3.GameLogic
 
         public void Update()
         {
-            if(KeyboardHelper.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.NumPad1))
+            if (KeyboardHelper.IsKeyDown(Microsoft.Xna.Framework.Input.Keys.NumPad1))
             {
                 Rotate(Direction.Y, -2, AngleType.Degree);
             }

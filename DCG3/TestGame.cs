@@ -84,7 +84,7 @@ namespace DCG3
             
             _cubeMetas = new Dictionary<Cube, CubeMeta>();
             _cubes = new List<Cube>();
-            for (var i = 0; i < 2000; i++)
+            for (var i = 0; i < 3000; i++)
             {
                 var c = new Cube();
                 c.Texture = _texAgu;
@@ -209,7 +209,7 @@ namespace DCG3
         protected override void Draw(GameTime gameTime)
         {
             frameCounter++;
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.Orange);
 
             _pBatch.Begin();
             //_cubes.Where(c => c.Position.Y > _cam.Position.Y).toli(c => c.Draw(_pBatch));
@@ -220,7 +220,7 @@ namespace DCG3
                     c.Draw(_pBatch);
             }
 
-            //_pBatch.Cube(Vector3.Zero, Vector3.One, Rotation.None, Color.Red, _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
+            //_pBatch.Cube(Vector3.Zero, Vector3.One, Rotation.None, Color.Red, _texAgu, Vtor2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
             _pBatch.Flush(_cam.GetView());
 
