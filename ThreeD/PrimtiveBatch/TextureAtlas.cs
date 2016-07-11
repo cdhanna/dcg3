@@ -11,84 +11,97 @@ namespace ThreeD.PrimtiveBatch
     internal class TextureAtlas
     {
 
+        /// <summary>
+        /// The size of the TextureAtlas' width AND height. The TextureAtlas will always be a square image.
+        /// </summary>
         public int TextureSize { get; private set; }
-        public Texture2D Texture { get { return _atlas; } }
+
+        /// <summary>
+        /// Gets the actual Texture2D of the TextureAtlas
+        /// </summary>
+        public Texture2D Texture { get; private set; }
 
 
-        private Texture2D _atlas;
-        private Dictionary<Texture2D, TextureAtlasIndex> _atlasLookup;
+        private readonly Dictionary<Texture2D, TextureAtlasIndex> _atlasLookup;
         private int _atlasMaxRowHeight;
         private Vector2 _offset;
-
-        private GraphicsDevice _device;
 
         public TextureAtlas(GraphicsDevice device, int size)
         {
             TextureSize = size;
-            _device = device;
-
-            _atlas = new Texture2D(device, TextureSize, TextureSize, false, SurfaceFormat.Color);
             _atlasLookup = new Dictionary<Texture2D, TextureAtlasIndex>();
 
+            // creates the atlas texture with the width&height
+            Texture = new Texture2D(device, TextureSize, TextureSize, false, SurfaceFormat.Color);
+            
+            // writes blank data to the texture atlas. Currently, the blank data is the color Gray
             var blankAtlasData = new Color[TextureSize * TextureSize];
             for (int i = 0; i < blankAtlasData.Length; i++)
                 blankAtlasData[i] = Color.Gray;
 
-            _atlas.SetData(0, new Rectangle(0, 0, TextureSize, TextureSize), blankAtlasData, 0, blankAtlasData.Length);
+            Texture.SetData(0, new Rectangle(0, 0, TextureSize, TextureSize), blankAtlasData, 0, blankAtlasData.Length);
             _atlasLookup.Clear();
 
 
             _offset = Vector2.Zero;
         }
 
-        public TextureAtlasIndex GetTexture(Texture2D texture)
-        {
-            if (_atlasLookup.ContainsKey(texture))
-                return _atlasLookup[texture];
-            throw new Exception("That texture is not in the atlas");
-        }
-
-        public TextureAtlasIndex AddTexture(Texture2D texture)
+        /// <summary>
+        /// Makes sure the given texture is in the atlas, and gets the atlasIndex of where the texture is.
+        /// </summary>
+        /// <param name="texture"></param>
+        /// <returns></returns>
+        public TextureAtlasIndex EnsureTexture(Texture2D texture)
         {
 
-            if (_atlasLookup.ContainsKey(texture))
+            if (_atlasLookup.ContainsKey(texture)) // do we already have this image, if so, goody!
+            {
                 return _atlasLookup[texture];
-
+            }
+                
             var size = new Vector2(texture.Width, texture.Height);
 
-            if (texture.Width > _atlas.Width || texture.Height > _atlas.Height)
+            // is the width or the height of the new image larger than the atlas itself, because if so, we are screwed
+            if (texture.Width > Texture.Width || texture.Height > Texture.Height)
             {
                 throw new Exception("Texture atlas isn't large enough to hold the image");
             }
 
-            if (_offset.X + size.X > _atlas.Width)
+            // we are going to put the image in the atlas at the _offset variable. 
+            // we need to check if the current offset.X is far enough away from the right edge of the image.
+            if (_offset.X + size.X > Texture.Width)
             {
+                // make a new line of images
                 _offset.X = 0;
                 _offset.Y += _atlasMaxRowHeight;
                 _atlasMaxRowHeight = 0;
             }
-            if (_offset.Y + size.Y > _atlas.Height)
+
+            // we need to check if we are out of y space.
+            if (_offset.Y + size.Y > Texture.Height)
             {
                 throw new Exception("Texture atlas out of memory. Boost memory, or use less images");
             }
+
+            // keep track of the image that has the largest Y size in the current row. 
+            // because when we need to drop down a line, we need to go down to this level
             if (size.Y > _atlasMaxRowHeight)
             {
                 _atlasMaxRowHeight = (int)Math.Ceiling(size.Y);
             }
 
             var position = new Vector2(_offset.X, _offset.Y);
-
-            var index = new TextureAtlasIndex("whocares", position, size);
-
-
+            var index = new TextureAtlasIndex(position, size);
             _atlasLookup.Add(texture, index);
+            
+            // actually put the iamge into the atlas
             var data = new Color[texture.Width * texture.Height];
             texture.GetData(data);
-
-            _atlas.SetData(0,
+            Texture.SetData(0,
                 new Rectangle((int)index.Position.X, (int)index.Position.Y, (int)index.Size.X, (int)index.Size.Y),
                 data, 0, data.Length);
 
+            // update the offset for next time.
             _offset = new Vector2(_offset.X + size.X, _offset.Y);
 
             return index;
@@ -96,37 +109,6 @@ namespace ThreeD.PrimtiveBatch
 
     }
 
-    internal class VerticiesAndIndicies
-    {
-        public List<VertexPositionColorNormalTexture> Verticies { get; set; }
-        public List<short> Indices { get; set; }
 
-        public VerticiesAndIndicies()
-        {
-            Verticies = new List<VertexPositionColorNormalTexture>();
-            Indices = new List<short>();
-
-        }
-
-        public VerticiesAndIndicies(List<VertexPositionColorNormalTexture> verts, List<short> inds)
-        {
-            Verticies = verts;
-            Indices = inds;
-        }
-    }
-
-    internal struct TextureAtlasIndex
-    {
-        public Vector2 Position;
-        public Vector2 Size;
-        public string Name;
-
-        public TextureAtlasIndex(string name, Vector2 pos, Vector2 size)
-        {
-            Name = name;
-            Position = pos;
-            Size = size;
-        }
-    }
 
 }

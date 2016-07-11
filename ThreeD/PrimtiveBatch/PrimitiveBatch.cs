@@ -15,13 +15,15 @@ namespace ThreeD.PrimtiveBatch
 
     public class PrimitiveBatch : IPrimitiveBatch
     {
+
+        #region Private Fields...
+
         private readonly GraphicsDevice _device;
         private readonly Texture2D _pixel;
 
         private readonly SpriteBatch _sb;
         private readonly BasicEffect _effect;
 
-        private readonly Matrix _projectionMatrix;
         private readonly Matrix _worldMatrix;
 
         private readonly BatchCollection _batchColl;
@@ -29,13 +31,18 @@ namespace ThreeD.PrimtiveBatch
 
         // the _batchVBOTable and _batchIBOTable are tables that point that hold an ongoing buffer for a given batch config, across begin/flush cycles.
         private Dictionary<BatchConfig, DynamicVertexBuffer> _batchVBOTable;
-        private Dictionary<BatchConfig, DynamicIndexBuffer> _batchIBOTable; 
+        private Dictionary<BatchConfig, DynamicIndexBuffer> _batchIBOTable;
+        
+        #endregion
+
+        #region Public Properties ...
 
         public bool HasBegun { get; private set; }
+        public bool AtlasShown { get; set; }
 
+        #endregion
 
-        public int BatchCount { get { return _batchColl.GetAll().Count; } }
-        public int TotalVertexCount { get; private set; }
+        #region Constructor
 
         public PrimitiveBatch(GraphicsDevice device)
         {
@@ -48,19 +55,16 @@ namespace ThreeD.PrimtiveBatch
             _pixel.SetData(new Color[] { Color.White });
 
             // create a texture atlas and a batch collection
+            AtlasShown = false;
             _atlas = new TextureAtlas(device, 1024);
-            _atlas.AddTexture(_pixel);
+            _atlas.EnsureTexture(_pixel);
             _batchColl = new BatchCollection();
 
             // create buffer tables
             _batchIBOTable = new Dictionary<BatchConfig, DynamicIndexBuffer>();
             _batchVBOTable = new Dictionary<BatchConfig, DynamicVertexBuffer>();
 
-
-            // configure basic projection and worl matrix.
-            _projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.ToRadians(45f),
-                device.DisplayMode.AspectRatio, 1f, 10000f);
+            // configure basic world matrix
             _worldMatrix = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Up);
 
             // make a basic effect that accepts our inputs
@@ -69,16 +73,20 @@ namespace ThreeD.PrimtiveBatch
             _effect.VertexColorEnabled = true;
             _effect.TextureEnabled = true;
             _effect.PreferPerPixelLighting = true;
-            //_effect.LightingEnabled = true;
-
-            //_effect.AmbientLightColor = new Vector3(.5f, .5f, .5f);
+            _effect.LightingEnabled = true;
             _effect.EnableDefaultLighting();
 
             HasBegun = false;
         }
 
+        #endregion
 
+        #region Begin and Flush
 
+        /// <summary>
+        /// Begining the PrimitiveBatch means that all of the existing batches are cleared out.
+        /// The texture atlas doesn't get reset, and the VBO/IBOs may stay alive.
+        /// </summary>
         public void Begin()
         {
             if (HasBegun)
@@ -87,9 +95,66 @@ namespace ThreeD.PrimtiveBatch
             }
             _batchColl.Clear();
             HasBegun = true;
-            TotalVertexCount = 0;
         }
 
+        /// <summary>
+        /// Actually draws all of the cubes that have been called. 
+        /// </summary>
+        /// <param name="viewMatrix">The view matrix that will be used to draw all the cubes</param>
+        /// <param name="projectionMatrix">the projection matrix that will be used to draw all the cubes</param>
+        public void Flush(Matrix viewMatrix, Matrix projectionMatrix)
+        {
+            if (!HasBegun) // double check that we aren't flushing without ever having started the batch
+            {
+                throw new Exception("The batch has not been started, and cannot be drawn");
+            }
+
+            // set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
+            _effect.Projection = projectionMatrix;
+            _effect.View = viewMatrix;
+            _effect.World = _worldMatrix;
+            _device.DepthStencilState = DepthStencilState.Default;
+            _device.RasterizerState = RasterizerState.CullCounterClockwise;
+
+            // time to iterate over all the batches. 
+            // each batch will effect graphics device configurations. 
+            _batchColl.GetAll().ForEach(batch =>
+            {
+                // set the texture and sampler state for this batch.
+                _effect.Texture = batch.Config.Texture;
+                _device.SamplerStates[0] = batch.Config.SamplerState;
+
+                // get vertex data and index data, and set the graphics device to use them
+                var vBuffer = GetVBOForBatch(batch);
+                var iBuffer = GetIBOForBatch(batch);
+                vBuffer.SetData(batch.VertexArray);
+                iBuffer.SetData(batch.IndexArray);
+                _device.SetVertexBuffer(vBuffer);
+                _device.Indices = iBuffer;
+
+                // actually do the draw call. 
+                foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply(); // sends pass to gfx. 
+                    _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, batch.GetIndexArrayLength() / 3);
+                }
+
+            });
+
+            // optionally display the texture atlas. 
+            if (AtlasShown)
+            {
+                _sb.Begin();
+                _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
+                _sb.End();
+            }
+
+            HasBegun = false;
+        }
+
+        #endregion
+
+        #region Cube Methods
         public void Cube(Vector3 position, Vector3 size, Rotation rotation)
         {
             Cube(position, size, rotation, Color.White);   
@@ -112,116 +177,64 @@ namespace ThreeD.PrimtiveBatch
             Cube(position, size, rotation, Color.White, texture, textureScale, samplerState, textureStyle);
         }
 
+        /// <summary>
+        /// Adds a cube to be drawn when flush() happens
+        /// </summary>
+        /// <param name="position">the position of the center of the cube</param>
+        /// <param name="size">the size of the cube</param>
+        /// <param name="rotation">the rotation of the cube</param>
+        /// <param name="color">the color of the cube</param>
+        /// <param name="texture">the texture the cube will use</param>
+        /// <param name="textureScale">a texture coordinate scaling vector, used to tile textures</param>
+        /// <param name="samplerState">the sampler state that the graphics device will be when this cube is actually drawn</param>
+        /// <param name="textureStyle">the texture style for applying the texture to the cube</param>
         public void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color, Texture2D texture,
             Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle)
         {
 
-            if (!HasBegun)
+            if (!HasBegun) // double check to make the user isn't drawing stuff without beginning the process
             {
                 throw new Exception("The batch has not begun, and cannot be drawn to");
             }
 
-            // are we using a texture atlas ?
-            //var cube = GetBaseCube(position, size, rotation, color);
-
-            if (texture == null)
+            if (texture == null) // we need a texture, so if the user didn't provide one, then give the standard white pixel
             {
                 texture = _pixel;
             }
 
-            if (samplerState == null)
+            if (samplerState == null) // normally we use the texture atlas, and the samplerState is clamped
             {
                 samplerState = SamplerState.LinearClamp;
             }
 
-            Batch batch = null;
+            // working variables. 
+            Batch batch;
             var inAtlas = false;
 
-            if (samplerState.Equals(SamplerState.LinearClamp))
+            
+            if (samplerState.Equals(SamplerState.LinearClamp)
+                || samplerState.Equals(SamplerState.PointClamp)
+                || samplerState.Equals(SamplerState.AnisotropicClamp)) // any of the xClamp sampler states trigger the usage of the texture atlas
             {
-                // using texture atlas
                 batch = GetBatch(_atlas.Texture, SamplerState.LinearClamp);
                 inAtlas = true;
             }
-            else if (samplerState.Equals(SamplerState.LinearWrap))
+            else // any other sampler state has its own batch.
             {
-                // using a custom texture 
                 batch = GetBatch(texture, SamplerState.LinearWrap);
             }
-            else throw new Exception("only linear clamp and wrap are supported sampler states");
 
-            List<VertexPositionColorNormalTexture> cubeVerts = ApplyCubeDetails(UnitCube.Verticies, position, size, rotation, color, textureStyle, textureScale, texture, inAtlas);
-            
-
-            batch.Add(new VerticiesAndIndicies(cubeVerts, UnitCube.Indices));
+            // this is jenky. 
+            // the ApplyCubeDetails function is going to put vertex data directly into the batch
+            ApplyCubeDetails(batch, position, size, rotation, color, textureStyle, textureScale, texture, inAtlas);
+            // and the addcubeIndicies function will add index data directly into the batch
+            batch.AddCubeIndicies();
 
         }
 
+        #endregion
 
-        public void Flush(Matrix viewMatrix)
-        {
-            if (!HasBegun)
-                throw new Exception("The batch has not been started, and cannot be drawn");
-
-            _effect.Projection = _projectionMatrix;
-            _effect.View = viewMatrix;
-            _effect.World = _worldMatrix;
-            _device.DepthStencilState = DepthStencilState.Default;
-            _device.RasterizerState = RasterizerState.CullCounterClockwise;
-
-
-            _effect.DirectionalLight2.Enabled = true;
-            _effect.DirectionalLight2.Direction = new Vector3(1, 0, 0);
-            _effect.DirectionalLight2.DiffuseColor = new Vector3(1, 0, 0);
-            _effect.DirectionalLight2.SpecularColor = new Vector3(0, 1, 0);
-
-            _batchColl.GetAll().ForEach(batch =>
-            {
-
-                _effect.Texture = batch.Config.Texture;
-
-                if (batch.Config.SamplerState == SamplerState.LinearClamp)
-                {
-                    _device.SamplerStates[0] = batch.Config.SamplerState;
-                }
-                else
-                {
-                    _device.SamplerStates[0] = SamplerState.PointWrap;
-                }
-
-
-                //var vBuffer = new VertexBuffer(_device, typeof(VertexPositionColorNormalTexture), batch.Verticies.Count, BufferUsage.None);
-                //vBuffer.SetData(batch.Verticies.ToArray());
-
-                //var iBuffer = new IndexBuffer(_device, typeof(short), batch.Indicies.Count, BufferUsage.None);
-                //iBuffer.SetData(batch.Indicies.ToArray());
-
-                var vBuffer = GetVBOForBatch(batch);
-                vBuffer.SetData(batch.Verticies.ToArray());
-                var iBuffer = GetIBOForBatch(batch);
-                iBuffer.SetData(batch.Indicies.ToArray());
-
-                _device.SetVertexBuffer(vBuffer);
-                _device.Indices = iBuffer;
-
-                TotalVertexCount += vBuffer.VertexCount;
-
-                foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
-                {
-                    pass.Apply(); // sends pass to gfx. 
-                    _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, iBuffer.IndexCount / 3);
-                }
-
-                //vBuffer.Dispose();
-                //iBuffer.Dispose();
-            });
-
-            _sb.Begin();
-            _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
-            _sb.End();
-
-            HasBegun = false;
-        }
+        #region Helper Methods
 
         private Batch GetBatch(Texture2D texture, SamplerState state)
         {
@@ -237,10 +250,10 @@ namespace ThreeD.PrimtiveBatch
             var create = false;
             var had = false;
             DynamicVertexBuffer vbo = null;
-            if (_batchVBOTable.TryGetValue(config, out vbo))
+            if (_batchVBOTable.TryGetValue(config, out vbo)) // try and get the existing vbo
             {
                 had = true;
-                if (vbo.VertexCount != batch.Verticies.Count)
+                if (vbo.VertexCount != batch.VertexArray.Length) // crap, the size has changed, we need to recreate it.
                 {
                     create = true;
                 }
@@ -250,9 +263,9 @@ namespace ThreeD.PrimtiveBatch
                 create = true;
             }
 
-            if (create)
+            if (create) // we need to create a new vbo
             {
-                var nextVbo = new DynamicVertexBuffer(_device, typeof(VertexPositionColorNormalTexture), batch.Verticies.Count, BufferUsage.None);
+                var nextVbo = new DynamicVertexBuffer(_device, typeof(VertexPositionColorNormalTexture), batch.VertexArray.Length, BufferUsage.None);
                 
                 // if we used to have a vbo, we need to toss the old one
                 if (had)
@@ -282,7 +295,7 @@ namespace ThreeD.PrimtiveBatch
             if (_batchIBOTable.TryGetValue(config, out ibo))
             {
                 had = true;
-                if (ibo.IndexCount != batch.Indicies.Count)
+                if (ibo.IndexCount != batch.IndexArray.Length)
                 {
                     create = true;
                 }
@@ -294,7 +307,7 @@ namespace ThreeD.PrimtiveBatch
 
             if (create)
             {
-                var nextIbo = new DynamicIndexBuffer(_device, typeof(short), batch.Indicies.Count, BufferUsage.None);
+                var nextIbo = new DynamicIndexBuffer(_device, typeof(short), batch.IndexArray.Length, BufferUsage.None);
 
                 // if we used to have a vbo, we need to toss the old one
                 if (had)
@@ -313,27 +326,38 @@ namespace ThreeD.PrimtiveBatch
             return ibo;
         }
 
-        private List<VertexPositionColorNormalTexture> ApplyCubeDetails(List<VertexPositionColorNormalTexture> cubeVerts, Vector3 position, Vector3 size, Rotation rotation, Color color,
+        /// <summary>
+        /// This function will generate the vertex data per cube.
+        /// All the translation, rotation, scaling, coloring, and texturing has been baked into this one function, which makes it speedy.
+        /// Data is inserted DIRECTLY into the Batch
+        /// </summary>
+        /// <param name="batch">The batch that this cube will be belong to</param>
+        /// <param name="position">The center of the cube</param>
+        /// <param name="size">the scale of the cube</param>
+        /// <param name="rotation">the rotation of the cube</param>
+        /// <param name="color">the color of the cube</param>
+        /// <param name="style">the texture style of the cube</param>
+        /// <param name="scale">the texture coordinate scale</param>
+        /// <param name="texture">the actual texture (not ever an atlas)</param>
+        /// <param name="inAtlas">should we be putting the texture inside the atlas</param>
+        private void ApplyCubeDetails(Batch batch, Vector3 position, Vector3 size, Rotation rotation, Color color,
             TextureStyle style, Vector2 scale, Texture2D texture, bool inAtlas)
         {
+            // the transformUV func is used to modify the standard cube UV coordinate to map into atlas version, or to simply wrap the texture around the cube. 
             var transformUV = new Func<Vector2, Vector2>(v => v * scale); // this is the 'wrap' version, where the atlas isn't being used.
 
             var texIndex = new TextureAtlasIndex(); // start as undefined.
             if (inAtlas)
             {
-                texIndex = _atlas.AddTexture(texture);
+                texIndex = _atlas.EnsureTexture(texture); // plot the texture in the atlas
 
                 // set the func to transform the UV to the atlas coordinate system.
                 var atlasSize = new Vector2(_atlas.TextureSize, _atlas.TextureSize);
                 var ratio = texIndex.Size / atlasSize;
-                transformUV = new Func<Vector2, Vector2>(v => (v * scale) * ratio + texIndex.Position / atlasSize);
+                transformUV = (v => (v * scale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
             }
 
             var rotationMatrix = Matrix.CreateFromAxisAngle(rotation.Axis, rotation.Radians);
-
-
-            var output = new List<VertexPositionColorNormalTexture>();
-
             for (int s = 0; s < 6; s++)
             {
                 var start = s * 4;
@@ -347,76 +371,75 @@ namespace ThreeD.PrimtiveBatch
                         x = (i == 1 || i == 2 ? 0 : 1);
                     }
 
-                    var vert = cubeVerts[i + start];
-                    output.Add(new VertexPositionColorNormalTexture(
+                    var vert = UnitCube[i + start];
+                    var outputVert = new VertexPositionColorNormalTexture(
                         Vector3.Transform(vert.Position * size, rotationMatrix) + position,
                         color,
                         transformUV(new Vector2(x, y)),
-                         Vector3.Transform(vert.Normal, rotationMatrix)));
+                         Vector3.Transform(vert.Normal, rotationMatrix));
+
+                    batch.AddVertex(outputVert);
                 }
             }
+           
 
-            return output;
         }
 
-        private VerticiesAndIndicies GetBaseCube(Vector3 position, Vector3 size, Rotation rotation, Color color)
-        {
-            var cube = UnitCube;
-            var axis = rotation.Axis;
-            //waxis.Normalize();
+        #endregion
 
+        #region Unit Elements
 
-
-            var verts = cube.Verticies
-                //.Scale(size)
-                //.Rotate(axis, rotation.Radians)
-                //.Translate(position);
-                .ScaleRotateTranslateColor(position, size, axis, rotation.Radians, color);
-
-
-
-            return new VerticiesAndIndicies(verts, cube.Indices);
-        }
-
-        private static readonly VerticiesAndIndicies UnitQuad =
-            new VerticiesAndIndicies(new VertexPositionColorNormalTexture[]
+        /// <summary>
+        /// This is a unit quad.
+        /// </summary>
+        private static readonly List<VertexPositionColorNormalTexture> UnitQuad =
+            new VertexPositionColorNormalTexture[]
             {
-                new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-                new VertexPositionColorNormalTexture(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0), new Vector3(0,0, -1)), 
-            }.ToList().Translate(new Vector3(-.5f, -.5f, 0)),
-            new short[]
-            {
-                0, 1, 2, 0, 2, 3
-            }.ToList());
+                new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)),
+                new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)),
+                new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)),
+                new VertexPositionColorNormalTexture(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)),
+            }.ToList().Translate(new Vector3(-.5f, -.5f, 0));
 
-
-        private static readonly VerticiesAndIndicies UnitCube =
-            new VerticiesAndIndicies(new VertexPositionColorNormalTexture[]
+        /// <summary>
+        /// This is a unit cube. 
+        /// </summary>
+        private static readonly List<VertexPositionColorNormalTexture> UnitCube =
+            new VertexPositionColorNormalTexture[]
             {
-                
+
             }.ToList()
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitY, MathHelper.PiOver2).Rotate(Vector3.UnitX, MathHelper.Pi).Translate(Vector3.UnitX * -.5f)) // left
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitX, MathHelper.Pi).Translate(Vector3.UnitZ * .5f)) // back
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitY, -MathHelper.PiOver2).Rotate(Vector3.UnitX, MathHelper.Pi).Translate(Vector3.UnitX * .5f)) // right
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitY, MathHelper.PiOver2)
+                    .Rotate(Vector3.UnitX, MathHelper.Pi)
+                    .Translate(Vector3.UnitX*-.5f)) // left
 
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitZ, MathHelper.Pi).Translate(Vector3.UnitZ * -.5f)) // front
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitX, -MathHelper.PiOver2).Translate(Vector3.UnitY * -.5f)) // bot
-            .Concat(UnitQuad.Verticies.Rotate(Vector3.UnitX, MathHelper.PiOver2).Translate(Vector3.UnitY * .5f)) // top
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitX, MathHelper.Pi)
+                    .Translate(Vector3.UnitZ*.5f)) // back
 
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitY, -MathHelper.PiOver2)
+                    .Rotate(Vector3.UnitX, MathHelper.Pi)
+                    .Translate(Vector3.UnitX*.5f)) // right
 
-            ,
-            new short[]
-            {
-                0, 1, 2, 0, 2, 3,
-                4, 5, 6, 4, 6, 7,
-                8, 9, 10, 8, 10, 11,
-                12, 13, 14, 12, 14, 15,
-                16, 17, 18, 16, 18, 19,
-                20, 21, 22, 20, 22, 23
-            }.ToList());
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitZ, MathHelper.Pi)
+                    .Translate(Vector3.UnitZ*-.5f)) // front
 
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitX, -MathHelper.PiOver2)
+                    .Translate(Vector3.UnitY*-.5f)) // bot
+                .Concat(UnitQuad
+                    .Rotate(Vector3.UnitX, MathHelper.PiOver2)
+                    .Translate(Vector3.UnitY*.5f)) // top
+            ;
+
+        #endregion
 
     }
 }

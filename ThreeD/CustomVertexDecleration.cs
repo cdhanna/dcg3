@@ -37,6 +37,8 @@ namespace ThreeD
         }
     }
 
+
+    // random helper methods of lists of vertexpositioncolornormaltextureblahblahs
     internal static class CustomVertexFunctions
     {
         internal static List<VertexPositionColorNormalTexture> Concat(this List<VertexPositionColorNormalTexture> self,
@@ -49,11 +51,6 @@ namespace ThreeD
 
         }
 
-        internal static List<VertexPositionColorNormalTexture> SetCapacity(this List<VertexPositionColorNormalTexture> self, int capacity)
-        {
-            self.Capacity = capacity;
-            return self;
-        } 
 
         internal static List<VertexPositionColorNormalTexture> Color(this List<VertexPositionColorNormalTexture> self,
             Color color)
@@ -104,18 +101,18 @@ namespace ThreeD
 
         }
 
-        internal static List<VertexPositionColorNormalTexture> ScaleRotateTranslateColor(this List<VertexPositionColorNormalTexture> self,
-            Vector3 translate, Vector3 scale, Vector3 axis, float radians, Color color)
-        {
-            var rotationMatrix = Matrix.CreateFromAxisAngle(axis, radians);
+        //internal static List<VertexPositionColorNormalTexture> ScaleRotateTranslateColor(this List<VertexPositionColorNormalTexture> self,
+        //    Vector3 translate, Vector3 scale, Vector3 axis, float radians, Color color)
+        //{
+        //    var rotationMatrix = Matrix.CreateFromAxisAngle(axis, radians);
 
-            return self.Select(v => new VertexPositionColorNormalTexture(
-                Vector3.Transform(v.Position * scale, rotationMatrix) + translate,
-                color,
-                v.TextureCoordinate,
-                 Vector3.Transform(v.Normal, rotationMatrix))).ToList();
+        //    return self.Select(v => new VertexPositionColorNormalTexture(
+        //        Vector3.Transform(v.Position * scale, rotationMatrix) + translate,
+        //        color,
+        //        v.TextureCoordinate,
+        //         Vector3.Transform(v.Normal, rotationMatrix))).ToList();
 
-        }
+        //}
 
 
 

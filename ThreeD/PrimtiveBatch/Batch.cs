@@ -8,114 +8,88 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace ThreeD.PrimtiveBatch
 {
-
-    /// <summary>
-    /// A BatchConfig is a struct of GraphicsDevice options. 
-    /// A BC's uniqueness is determined by the values of its 4 fields
-    /// </summary>
-    internal struct BatchConfig
-    {
-        public Texture2D Texture;
-        public PrimitiveType PrimtiveType;
-        public SamplerState SamplerState;
-        public BlendState BlendState;
-
-
-        public BatchConfig(Texture2D texture, PrimitiveType primType, SamplerState sampler, BlendState blend)
-        {
-            Texture = texture;
-            PrimtiveType = primType;
-            BlendState = blend;
-            SamplerState = sampler;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is BatchConfig)
-            {
-                var other = (BatchConfig) obj;
-
-                return other.PrimtiveType.Equals(PrimtiveType)
-                       && other.BlendState.Equals(BlendState)
-                       && other.Texture.Equals(Texture)
-                       && other.SamplerState.Equals(SamplerState);
-
-            }
-            else return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Texture.GetHashCode()*3
-                   + PrimtiveType.GetHashCode()*7
-                   + SamplerState.GetHashCode()*11;
-        }
-
-
-    }
-
-    internal class BatchCollection
-    {
-        private Dictionary<BatchConfig, Batch> _batches;
-        
-        public BatchCollection()
-        {
-            _batches = new Dictionary<BatchConfig, Batch>();
-        }
-
-        public void Clear()
-        {
-            _batches.Clear();
-        }
-
-        public List<Batch> GetAll()
-        {
-            return _batches.Values.ToList();
-        } 
-
-        public Batch Get(BatchConfig conf)
-        {
-            if (!_batches.ContainsKey(conf))
-                _batches.Add(conf, new Batch(conf));
-            return _batches[conf];
-        }
-
-    }
-
     internal class Batch
     {
         public BatchConfig Config { get; set; }
 
-        public List<VertexPositionColorNormalTexture> Verticies { get; set; }
-        public List<short> Indicies { get; set; }
+        public VertexPositionColorNormalTexture[] VertexArray { get; set; }
+        public short[] IndexArray { get; set; }
+        public int VertexArrayCapacity { get; set; }
+        public int IndexArrayCapacity { get; set; }
 
-        private GraphicsDevice _device;
-        private VertexBuffer _vbo;
-        private IndexBuffer _ibo;
+        private int _indexArrayRunningIndex;
+        private int _vertexArrayRunningIndex;
+        private int _count;
+
+        private static readonly short[] CubeIndicies = new short[]
+        {
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19,
+            20, 21, 22, 20, 22, 23
+        };
 
         public Batch(BatchConfig config)
         {
             
             Config = config;
-            Verticies = new List<VertexPositionColorNormalTexture>();
-            Indicies = new List<short>();
 
+            VertexArrayCapacity = 2048;
+            IndexArrayCapacity = 2048;
+            _vertexArrayRunningIndex = 0;
+            _indexArrayRunningIndex = 0;
+            VertexArray = new VertexPositionColorNormalTexture[VertexArrayCapacity];
+            IndexArray = new short[IndexArrayCapacity];
         }
 
-        public void Add(VerticiesAndIndicies vai)
+        public void AddVertex(VertexPositionColorNormalTexture v)
         {
-            var start = Verticies.Count;
-            Verticies.AddRange(vai.Verticies);
-            vai.Indices.ForEach(i => Indicies.Add( (short)(i + start) ));
+            // check and make sure that our size is big enough to hold the new vertex.
+            if (_vertexArrayRunningIndex >= VertexArrayCapacity)
+            {
+                VertexArrayCapacity *= 2;
+                var next = new VertexPositionColorNormalTexture[VertexArrayCapacity];
+                Array.Copy(VertexArray, 0, next, 0, VertexArray.Length);
+                VertexArray = next;
+            }
+
+            // plop the vertex in the array
+            VertexArray[_vertexArrayRunningIndex] = v;
+            _vertexArrayRunningIndex += 1;
         }
 
+        public int GetVertexArrayLength()
+        {
+            return _vertexArrayRunningIndex;
+        }
 
+        public void AddCubeIndicies()
+        {
 
+            // check and make sure that our size is big enough to hold the new indicies.
+            if (_indexArrayRunningIndex + CubeIndicies.Length >= IndexArrayCapacity)
+            {
+                IndexArrayCapacity *= 2;
+                var next = new short[IndexArrayCapacity];
+                Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
+                IndexArray = next;
+            }
+            
+            // time to go in and add the 36 points for each cube.
+            for (int i = 0; i < CubeIndicies.Length; i++)
+            {
+                IndexArray[i + _indexArrayRunningIndex] = (short) (CubeIndicies[i] + (short)_count);
+            }
+            _count += 24;
+            _indexArrayRunningIndex += CubeIndicies.Length;
+        }
 
-        
+        public int GetIndexArrayLength()
+        {
+            return _indexArrayRunningIndex;
+        }
 
     }
-
-
-
 }

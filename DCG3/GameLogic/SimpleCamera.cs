@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace DCG3.GameLogic
 {
@@ -15,8 +16,13 @@ namespace DCG3.GameLogic
         public Vector3 Target { get; set; }
         public Vector3 Up { get; set; }
 
-        public SimpleCamera()
+        public Matrix ProjectionMatrix { get; set; }
+
+        public SimpleCamera(GraphicsDevice device)
         {
+            ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+                MathHelper.ToRadians(45f),
+                device.DisplayMode.AspectRatio, 1f, 10000f);
             Position = Vector3.Zero;
             Target = Vector3.Zero;
             Up = Vector3.Up;

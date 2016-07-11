@@ -12,8 +12,6 @@ namespace ThreeD.PrimtiveBatch
     {
         void Begin();
 
-
-
         void Cube(Vector3 position, Vector3 size, Rotation rotation);
 
         void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color);
@@ -24,7 +22,7 @@ namespace ThreeD.PrimtiveBatch
 
         void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color, Texture2D texture, Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
-        void Flush(Matrix viewMatrix);
+        void Flush(Matrix viewMatrix, Matrix projectionMatrix);
     }
 
     public enum TextureStyle

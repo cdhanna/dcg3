@@ -54,7 +54,7 @@ namespace DCG3
         protected override void Initialize()
         {
             _pBatch = new PrimitiveBatch(GraphicsDevice);
-            _cam = new SimpleCamera();
+            _cam = new SimpleCamera(GraphicsDevice);
 
             var font = Content.Load<SpriteFont>("basic");
             _menuSystem = new MenuSystem(GraphicsDevice, font);
@@ -68,9 +68,7 @@ namespace DCG3
                 m => m.Label("Batching Test")
                     .Add(),
                 m => m.DataList(
-                    m.KeyValue("FPS", () => frameRate.ToString()),
-                    m.KeyValue("Vertex Count", () => _pBatch.TotalVertexCount.ToString()),
-                    m.KeyValue("Batch Count", () => _pBatch.BatchCount.ToString()))
+                    m.KeyValue("FPS", () => frameRate.ToString()))
                     .Add(),
                 m => m.Do(b => b.Width(.3f)).Do(b => b.X(.7f)).Do(b => b.Height(.5f))
                 );
@@ -84,7 +82,7 @@ namespace DCG3
             
             _cubeMetas = new Dictionary<Cube, CubeMeta>();
             _cubes = new List<Cube>();
-            for (var i = 0; i < 3000; i++)
+            for (var i = 0; i < 10000; i++)
             {
                 var c = new Cube();
                 c.Texture = _texAgu;
@@ -209,20 +207,24 @@ namespace DCG3
         protected override void Draw(GameTime gameTime)
         {
             frameCounter++;
-            GraphicsDevice.Clear(Color.Orange);
+            GraphicsDevice.Clear(Color.Black);
 
             _pBatch.Begin();
             //_cubes.Where(c => c.Position.Y > _cam.Position.Y).toli(c => c.Draw(_pBatch));
 
+            var view = _cam.GetView();
+            var bf = new BoundingFrustum(view*_cam.ProjectionMatrix);
+            
+           
             foreach (var c in _cubes)
             {
-                //if (c.Position.Y > _cam.Position.Y * _camRadius)
+                if (bf.Intersects(new BoundingBox(c.Position - c.Size/2, c.Position + c.Size * 2)))
                     c.Draw(_pBatch);
             }
 
             //_pBatch.Cube(Vector3.Zero, Vector3.One, Rotation.None, Color.Red, _texAgu, Vtor2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
-            _pBatch.Flush(_cam.GetView());
+            _pBatch.Flush(view, _cam.ProjectionMatrix);
 
             _menuSystem.Draw();
 
