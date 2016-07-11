@@ -162,19 +162,19 @@ namespace ThreeD.PrimtiveBatch
 
         public void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color)
         {
-            Cube(position, size, rotation, color, null, Vector2.One, SamplerState.LinearClamp, TextureStyle.PerQuad);
+            Cube(position, size, rotation, color, null, Vector2.One, Vector2.One, SamplerState.LinearClamp, TextureStyle.PerQuad);
         }
 
         public void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture,
             TextureStyle textureStyle = TextureStyle.PerQuad)
         {
-            Cube(position, size, rotation, Color.White, texture, Vector2.One, SamplerState.LinearClamp, textureStyle);
+            Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.One, SamplerState.LinearClamp, textureStyle);
         }
 
         public void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture, Vector2 textureScale,
             SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad)
         {
-            Cube(position, size, rotation, Color.White, texture, textureScale, samplerState, textureStyle);
+            Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.One, samplerState, textureStyle);
         }
 
         /// <summary>
@@ -189,7 +189,7 @@ namespace ThreeD.PrimtiveBatch
         /// <param name="samplerState">the sampler state that the graphics device will be when this cube is actually drawn</param>
         /// <param name="textureStyle">the texture style for applying the texture to the cube</param>
         public void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color, Texture2D texture,
-            Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle)
+            Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
         {
 
             if (!HasBegun) // double check to make the user isn't drawing stuff without beginning the process
@@ -226,7 +226,7 @@ namespace ThreeD.PrimtiveBatch
 
             // this is jenky. 
             // the ApplyCubeDetails function is going to put vertex data directly into the batch
-            ApplyCubeDetails(batch, position, size, rotation, color, textureStyle, textureScale, texture, inAtlas);
+            ApplyCubeDetails(batch, position, size, rotation, color, textureStyle, textureScale, textureOffset, texture, inAtlas);
             // and the addcubeIndicies function will add index data directly into the batch
             batch.AddCubeIndicies();
 
@@ -333,18 +333,21 @@ namespace ThreeD.PrimtiveBatch
         /// </summary>
         /// <param name="batch">The batch that this cube will be belong to</param>
         /// <param name="position">The center of the cube</param>
-        /// <param name="size">the scale of the cube</param>
+        /// <param name="size">the textureScale of the cube</param>
         /// <param name="rotation">the rotation of the cube</param>
         /// <param name="color">the color of the cube</param>
         /// <param name="style">the texture style of the cube</param>
-        /// <param name="scale">the texture coordinate scale</param>
+        /// <param name="textureScale">the texture coordinate textureScale</param>
         /// <param name="texture">the actual texture (not ever an atlas)</param>
         /// <param name="inAtlas">should we be putting the texture inside the atlas</param>
         private void ApplyCubeDetails(Batch batch, Vector3 position, Vector3 size, Rotation rotation, Color color,
-            TextureStyle style, Vector2 scale, Texture2D texture, bool inAtlas)
+            TextureStyle style, Vector2 textureScale, Vector2 textureOffset, Texture2D texture, bool inAtlas)
         {
+
+            var applyTexOffset = new Func<Vector2, Vector2>( v => (v + textureOffset));
+
             // the transformUV func is used to modify the standard cube UV coordinate to map into atlas version, or to simply wrap the texture around the cube. 
-            var transformUV = new Func<Vector2, Vector2>(v => v * scale); // this is the 'wrap' version, where the atlas isn't being used.
+            var transformUV = new Func<Vector2, Vector2>(v => applyTexOffset(v) * textureScale); // this is the 'wrap' version, where the atlas isn't being used.
 
             var texIndex = new TextureAtlasIndex(); // start as undefined.
             if (inAtlas)
@@ -354,7 +357,7 @@ namespace ThreeD.PrimtiveBatch
                 // set the func to transform the UV to the atlas coordinate system.
                 var atlasSize = new Vector2(_atlas.TextureSize, _atlas.TextureSize);
                 var ratio = texIndex.Size / atlasSize;
-                transformUV = (v => (v * scale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
+                transformUV = (v => (applyTexOffset(v) * textureScale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
             }
 
             var rotationMatrix = Matrix.CreateFromAxisAngle(rotation.Axis, rotation.Radians);

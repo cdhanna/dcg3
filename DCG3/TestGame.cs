@@ -15,7 +15,7 @@ namespace DCG3
 
     struct CubeMeta
     {
-        public float YSpeed, AngleSpeed;
+        public float YSpeed, AngleSpeed, TexScrollX;
     }
     /// <summary>
     /// This is the main type for your game.
@@ -82,13 +82,14 @@ namespace DCG3
             
             _cubeMetas = new Dictionary<Cube, CubeMeta>();
             _cubes = new List<Cube>();
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 1000; i++)
             {
                 var c = new Cube();
                 c.Texture = _texAgu;
                 c.Position = new Vector3(RandomFloat(-7, 7), RandomFloat(-300, 0), RandomFloat(-7, 7));
                 c.Rotation = new Rotation(RandomUnit(), RandomFloat(0, MathHelper.Pi));
                 c.Size = new Vector3(RandomFloat(1, 2), RandomFloat(1, 2), RandomFloat(1, 2)) * .5f;
+                c.UVOffset = new Vector2(RandomFloat(0, 1), 0f);
                 if (RandomCheck())
                 {
 
@@ -111,6 +112,7 @@ namespace DCG3
                 var meta = new CubeMeta();
                 meta.AngleSpeed = RandomFloat(-.05f, .05f);
                 meta.YSpeed = RandomFloat(.02f, .05f);
+                meta.TexScrollX = RandomFloat(-.01f, .01f);
                 _cubeMetas.Add(c, meta);
                 _cubes.Add(c);
             }
@@ -167,7 +169,7 @@ namespace DCG3
             {
                 c.Rotation = new Rotation(c.Rotation.Axis, c.Rotation.Radians + _cubeMetas[c].AngleSpeed);
                 c.Position -= Vector3.UnitY * _cubeMetas[c].YSpeed;
-
+                c.UVOffset = new Vector2(c.UVOffset.X + _cubeMetas[c].TexScrollX, c.UVOffset.Y);
                 if (c.Position.Y < -300)
                 {
                     c.Position *= new Vector3(1, 0, 1);
