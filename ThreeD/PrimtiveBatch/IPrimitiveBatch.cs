@@ -12,15 +12,15 @@ namespace ThreeD.PrimtiveBatch
     {
         void Begin();
 
-        void Cube(Vector3 position, Vector3 size, Rotation rotation);
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation);
 
-        void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color);
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color);
 
-        void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture, TextureStyle textureStyle=TextureStyle.PerQuad);
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, TextureStyle textureStyle = TextureStyle.PerQuad);
 
-        void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture, Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
-        void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color, Texture2D texture, Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
         void Flush(Matrix viewMatrix, Matrix projectionMatrix);
     }

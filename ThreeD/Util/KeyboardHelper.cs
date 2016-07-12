@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Input;
 
-namespace DCG3.GameLogic
+namespace ThreeD.Util
 {
-    class KeyboardHelper
+    public class KeyboardHelper
     {
 
         private static KeyboardState _old, _new;

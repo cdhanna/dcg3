@@ -63,6 +63,9 @@
     <Compile Include="PrimtiveBatch\TextureAtlasIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rotation.cs" />
+    <Compile Include="Util\FPSHelper.cs" />
+    <Compile Include="Util\KeyboardHelper.cs" />
+    <Compile Include="Util\Rand.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

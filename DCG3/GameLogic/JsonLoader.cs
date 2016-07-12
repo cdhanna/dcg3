@@ -17,6 +17,8 @@ namespace DCG3.GameLogic
         public Vector3 Size { get; set; }
         public Vector3 Color { get; set; }
         public string Texture { get; set; }
+        public Vector2 TextureTiles { get; set; }
+        
         //public float X, Y, Z, Width, Height, Depth, R, G, B;
 
         public ObjectJSON()
@@ -25,6 +27,7 @@ namespace DCG3.GameLogic
             Size = Vector3.One;
             Color = Vector3.One;
             Texture = null;
+            TextureTiles = Vector2.One;
         }
     }
 
@@ -56,7 +59,8 @@ namespace DCG3.GameLogic
                     Position = o.Position,
                     Size = o.Size,
                     Color = new Color(o.Color.X, o.Color.Y, o.Color.Z),
-                    Texture = o.Texture == null ? null : content.Load<Texture2D>(o.Texture)
+                    Texture = o.Texture == null ? null : content.Load<Texture2D>(o.Texture),
+                    UV = o.TextureTiles
                 }
             ).ToList();
             level.PlayerStart = json.PlayerStart;

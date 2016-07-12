@@ -73,8 +73,8 @@ namespace ThreeD.PrimtiveBatch
             _effect.VertexColorEnabled = true;
             _effect.TextureEnabled = true;
             _effect.PreferPerPixelLighting = true;
-            _effect.LightingEnabled = true;
-            _effect.EnableDefaultLighting();
+           // _effect.LightingEnabled = true;
+         //   _effect.EnableDefaultLighting();
 
             HasBegun = false;
         }
@@ -116,6 +116,7 @@ namespace ThreeD.PrimtiveBatch
             _device.DepthStencilState = DepthStencilState.Default;
             _device.RasterizerState = RasterizerState.CullCounterClockwise;
 
+            _device.BlendState = BlendState.AlphaBlend;
             // time to iterate over all the batches. 
             // each batch will effect graphics device configurations. 
             _batchColl.GetAll().ForEach(batch =>
@@ -155,23 +156,23 @@ namespace ThreeD.PrimtiveBatch
         #endregion
 
         #region Cube Methods
-        public void Cube(Vector3 position, Vector3 size, Rotation rotation)
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation)
         {
             Cube(position, size, rotation, Color.White);   
         }
 
-        public void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color)
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color)
         {
             Cube(position, size, rotation, color, null, Vector2.One, Vector2.One, SamplerState.LinearClamp, TextureStyle.PerQuad);
         }
 
-        public void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture,
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture,
             TextureStyle textureStyle = TextureStyle.PerQuad)
         {
             Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.One, SamplerState.LinearClamp, textureStyle);
         }
 
-        public void Cube(Vector3 position, Vector3 size, Rotation rotation, Texture2D texture, Vector2 textureScale,
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale,
             SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad)
         {
             Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.One, samplerState, textureStyle);
@@ -188,7 +189,7 @@ namespace ThreeD.PrimtiveBatch
         /// <param name="textureScale">a texture coordinate scaling vector, used to tile textures</param>
         /// <param name="samplerState">the sampler state that the graphics device will be when this cube is actually drawn</param>
         /// <param name="textureStyle">the texture style for applying the texture to the cube</param>
-        public void Cube(Vector3 position, Vector3 size, Rotation rotation, Color color, Texture2D texture,
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture,
             Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
         {
 
@@ -340,10 +341,10 @@ namespace ThreeD.PrimtiveBatch
         /// <param name="textureScale">the texture coordinate textureScale</param>
         /// <param name="texture">the actual texture (not ever an atlas)</param>
         /// <param name="inAtlas">should we be putting the texture inside the atlas</param>
-        private void ApplyCubeDetails(Batch batch, Vector3 position, Vector3 size, Rotation rotation, Color color,
+        private void ApplyCubeDetails(Batch batch, Vector3 position, Vector3 size, Quaternion rotation, Color color,
             TextureStyle style, Vector2 textureScale, Vector2 textureOffset, Texture2D texture, bool inAtlas)
         {
-
+            
             var applyTexOffset = new Func<Vector2, Vector2>( v => (v + textureOffset));
 
             // the transformUV func is used to modify the standard cube UV coordinate to map into atlas version, or to simply wrap the texture around the cube. 
@@ -360,7 +361,8 @@ namespace ThreeD.PrimtiveBatch
                 transformUV = (v => (applyTexOffset(v) * textureScale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
             }
 
-            var rotationMatrix = Matrix.CreateFromAxisAngle(rotation.Axis, rotation.Radians);
+            var rotationMatrix = Matrix.CreateFromQuaternion(rotation);
+            //var rotationMatrix = Matrix.CreateFromAxisAngle(rotation.Axis, rotation.Radians);
             for (int s = 0; s < 6; s++)
             {
                 var start = s * 4;

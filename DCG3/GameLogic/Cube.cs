@@ -14,7 +14,7 @@ namespace DCG3.GameLogic
         public Vector3 Position { get; set; }
         public Color Color { get; set; }
         public Vector3 Size { get; set; }
-        public Rotation Rotation { get; set; }
+        public Quaternion Rotation { get; set; }
         public Texture2D Texture { get; set; }
         public Vector2 UV { get; set; }
         public Vector2 UVOffset { get; set; }
@@ -22,6 +22,7 @@ namespace DCG3.GameLogic
 
         public Cube()
         {
+            Rotation = Quaternion.Identity;
             Position = Vector3.Zero;
             Color = Color.White;
             Size = Vector3.One;
@@ -32,8 +33,9 @@ namespace DCG3.GameLogic
 
         public void Draw(IPrimitiveBatch pBatch)
         {
-            pBatch.Cube(Position, Size, Rotation, Color, Texture, UV, UVOffset, SamplerState.LinearWrap, TextureStyle);;
-           // pBatch.Draw(Position, Size, Quaternion.Identity,  Texture);
+            //pBatch.Cube(Position, Size, Rotation, Color);
+             pBatch.Cube(Position, Size, Rotation, Color, Texture, UV, UVOffset, SamplerState.LinearWrap, TextureStyle);;
+            // pBatch.Draw(Position, Size, Quaternion.Identity,  Texture);
         }
     }
 }

@@ -1,30 +1,23 @@
 ﻿{
 	"PlayerStart": "0,1,0",
-	"CameraStart": "0,15, -8",
+	"CameraStart": "0,15, 0",
 	"Objects": [
 
 		{	// FLOOR _________________
 			"Position": "0, 0, 0",
-			"Size": "10, 1, 10",
-			"Color": ".5, .5, .5",
+			"Size": "24, 1, 24",
+			"Color": ".5, 1, .5",
 			
-			"Texture": "floor"
+			"Texture": "tile",
+			"TextureTiles": "18, 18"
 		},
 
+		//{	// WALL _________________
+		//	"Position": "5.5, 4.5, 0",
+		//	"Size": "1, 10, 10",
+		//	"Color": ".7, .3, .2",
+		//	"Texture": "brick"
+		//},
 
-		{	// WALL _________________
-			"Position": "6, 5, 0",
-			"Size": "1, 10, 10",
-			"Color": ".7, .3, .2",
-			"Texture": "brick"
-		},
-
-		{	// WALL _________________
-			"Position": "-6, 4, 0",
-			"Size": "1, 10, 10",
-			"Color": ".2, .3, .7",
-			
-			"Texture": "brick"
-		},
 	]
 }
