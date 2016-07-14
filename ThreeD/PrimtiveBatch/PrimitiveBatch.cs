@@ -29,6 +29,8 @@ namespace ThreeD.PrimtiveBatch
         private readonly BatchCollection _batchColl;
         private readonly TextureAtlas _atlas;
 
+        private RenderTarget2D _colorRT, _normalRT, _depthRT; // the mysterious deferred render targets... 
+
         // the _batchVBOTable and _batchIBOTable are tables that point that hold an ongoing buffer for a given batch config, across begin/flush cycles.
         private Dictionary<BatchConfig, DynamicVertexBuffer> _batchVBOTable;
         private Dictionary<BatchConfig, DynamicIndexBuffer> _batchIBOTable;
@@ -77,6 +79,19 @@ namespace ThreeD.PrimtiveBatch
          //   _effect.EnableDefaultLighting();
 
             HasBegun = false;
+
+
+            // initialize the deferred RTs
+            var bbWidth = device.PresentationParameters.BackBufferWidth;
+            var bbHeight = device.PresentationParameters.BackBufferHeight;
+            _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+            _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Single, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+
+
+
+
+
         }
 
         #endregion
@@ -109,14 +124,27 @@ namespace ThreeD.PrimtiveBatch
                 throw new Exception("The batch has not been started, and cannot be drawn");
             }
 
+
+            SetGBuffer();
+            ClearGBuffer();
+            //scene.DrawScene(camera, gameTime);
+           
+
+
             // set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
             _effect.Projection = projectionMatrix;
             _effect.View = viewMatrix;
             _effect.World = _worldMatrix;
+
+           
             _device.DepthStencilState = DepthStencilState.Default;
             _device.RasterizerState = RasterizerState.CullCounterClockwise;
 
-            _device.BlendState = BlendState.AlphaBlend;
+            RenderGBufferEffect.Parameters["World"].SetValue(Matrix.Identity);
+            RenderGBufferEffect.Parameters["View"].SetValue(viewMatrix);
+            RenderGBufferEffect.Parameters["Projection"].SetValue(projectionMatrix);
+            
+
             // time to iterate over all the batches. 
             // each batch will effect graphics device configurations. 
             _batchColl.GetAll().ForEach(batch =>
@@ -124,6 +152,8 @@ namespace ThreeD.PrimtiveBatch
                 // set the texture and sampler state for this batch.
                 _effect.Texture = batch.Config.Texture;
                 _device.SamplerStates[0] = batch.Config.SamplerState;
+                
+                //RenderGBufferEffect.Parameters["Texture"].SetValue(batch.Config.Texture);
 
                 // get vertex data and index data, and set the graphics device to use them
                 var vBuffer = GetVBOForBatch(batch);
@@ -134,7 +164,7 @@ namespace ThreeD.PrimtiveBatch
                 _device.Indices = iBuffer;
 
                 // actually do the draw call. 
-                foreach (EffectPass pass in _effect.CurrentTechnique.Passes)
+                foreach (EffectPass pass in RenderGBufferEffect.Techniques[0].Passes)
                 {
                     pass.Apply(); // sends pass to gfx. 
                     _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, batch.GetIndexArrayLength() / 3);
@@ -143,14 +173,20 @@ namespace ThreeD.PrimtiveBatch
             });
 
             // optionally display the texture atlas. 
-            if (AtlasShown)
-            {
-                _sb.Begin();
-                _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
-                _sb.End();
-            }
+            //if (AtlasShown)
+            //{
+            //    _sb.Begin();
+            //    _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
+            //    _sb.End();
+            //}
 
+            ResolveGBuffer();
             HasBegun = false;
+
+
+            _sb.Begin();
+            _sb.Draw(_colorRT, Vector2.Zero, Color.White);
+            _sb.End();
         }
 
         #endregion
@@ -391,6 +427,52 @@ namespace ThreeD.PrimtiveBatch
         }
 
         #endregion
+
+        #region DeferredFunctions
+
+        public Effect ClearGBufferEffect { get; set; }
+        public Effect RenderGBufferEffect { get; set; }
+
+        private void SetGBuffer()
+        {
+          
+           _device.SetRenderTargets(_colorRT, _normalRT, _depthRT);
+        }
+
+        private void ResolveGBuffer()
+        {
+            RenderTarget2D blank = null; // TODO is this broken? lololol
+            //_device.SetRenderTarget(blank, 0);
+            //_device.SetRenderTarget(blank, 1);
+            //_device.SetRenderTarget(blank, 2);
+            _device.SetRenderTarget(null);
+            //_device.SetRenderTargets(blank,blank, blank);
+        }
+
+        private void ClearGBuffer()
+        {
+
+            //foreach (EffectPass pass in ClearGBufferEffect.Techniques[0].Passes)
+            //{
+            //    pass.Apply(); // sends pass to gfx. 
+            //    SpriteBatch
+            //}
+            _sb.Begin(SpriteSortMode.Immediate,
+                BlendState.NonPremultiplied,
+                SamplerState.LinearClamp,
+                DepthStencilState.Default,
+                RasterizerState.CullNone,
+                ClearGBufferEffect);
+            _sb.Draw(_pixel,
+                new Rectangle(0, 0, _device.PresentationParameters.BackBufferWidth,
+                    _device.PresentationParameters.BackBufferHeight), Color.White);
+            _sb.End();
+            //quadRenderer.Render(Vector2.One * -1, Vector2.One);
+        }
+
+
+        #endregion
+
 
         #region Unit Elements
 

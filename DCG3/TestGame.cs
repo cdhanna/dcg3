@@ -50,7 +50,10 @@ namespace DCG3
             _texBorderGlow = Content.Load<Texture2D>("glowborder");
             _cellTex = Content.Load<Texture2D>("cell");
 
-            
+
+            _pBatch.ClearGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/ClearGBuffer.build.fx");
+            _pBatch.RenderGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/RenderGBuffer.build.fx");
+
             _cam.Target = Vector3.Zero;
             _rand = new Rand();
             _fps = new FPSHelper();
