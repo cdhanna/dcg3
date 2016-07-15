@@ -53,6 +53,7 @@ namespace DCG3
 
             _pBatch.ClearGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/ClearGBuffer.build.fx");
             _pBatch.RenderGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/RenderGBuffer.build.fx");
+            _pBatch.PassThroughEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/PassThrough.build.fx");
 
             _cam.Target = Vector3.Zero;
             _rand = new Rand();
@@ -91,13 +92,44 @@ namespace DCG3
             _plr.Update(gameTime);
             _cam.Update();
 
-            _cam.Position = _plr.BackPosition;
             _cam.Target = _plr.Position;
+
+            if (KeyboardHelper.IsKeyDown(Keys.A))
+            {
+                a -= .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.D))
+            {
+                a += .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.W))
+            {
+                b -= .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.S))
+            {
+                b += .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.Q))
+            {
+                c -= .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.E))
+            {
+                c += .01f;
+            }
+
 
             KeyboardHelper.Update();
             base.Update(gameTime);
         }
 
+        private float a = 0,  b = 0, c = 0 ;
 
         protected override void Draw(GameTime gameTime)
         {
@@ -110,11 +142,20 @@ namespace DCG3
             //_cam.Target = Vector3.Zero;
             var view = _cam.GetView();
 
-           
 
-            _level.Draw(_pBatch);
-            _plr.Draw(_pBatch);
 
+            //_level.Draw(_pBatch);
+            //_plr.Draw(_pBatch);
+            var r = c + 5;
+            _cam.Position = new Vector3(r* (float)Math.Cos(a), 0, r* (float)Math.Sin(a));
+            _cam.Target = Vector3.Zero;
+           // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
+
+
+            _pBatch.Sphere(Vector3.Zero + Vector3.UnitX * b, Vector3.One, .6f);
+            _pBatch.Cube(new Vector3(0, 1, 3), Vector3.One, Quaternion.Identity, _texAgu );
+            _pBatch.Sphere(Vector3.Zero + Vector3.UnitY * 2, new Vector3(1, 1, 2),  1);
+            //_pBatch.AtlasShown = true;
             _pBatch.Flush(view, _cam.ProjectionMatrix);
 
             base.Draw(gameTime);

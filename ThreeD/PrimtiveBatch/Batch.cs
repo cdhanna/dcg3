@@ -65,6 +65,29 @@ namespace ThreeD.PrimtiveBatch
             return _vertexArrayRunningIndex;
         }
 
+        public void AddSomeIndicies(short[] indicies, short offset)
+        {
+            // check and make sure that our size is big enough to hold the new indicies.
+            if (_indexArrayRunningIndex + indicies.Length >= IndexArrayCapacity)
+            {
+                IndexArrayCapacity *= 2;
+                var next = new short[IndexArrayCapacity];
+                Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
+                IndexArray = next;
+            }
+
+            //IndexArray = indicies; // TODO wont work. 
+            //_indexArrayRunningIndex = indicies.Length;
+            // time to go in and add the 36 points for each cube.
+            for (int i = 0; i < indicies.Length; i++)
+            {
+                IndexArray[i + _indexArrayRunningIndex] = (short)(indicies[i] + (short)offset);
+            }
+           
+            _indexArrayRunningIndex += indicies.Length;
+
+        }
+
         public void AddCubeIndicies()
         {
 

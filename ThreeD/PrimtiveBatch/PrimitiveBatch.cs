@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.OleDb;
+using System.Globalization;
 using System.Linq;
 using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
@@ -71,10 +72,10 @@ namespace ThreeD.PrimtiveBatch
 
             // make a basic effect that accepts our inputs
             _effect = new BasicEffect(device);
-            _effect.Alpha = 1.0f;
-            _effect.VertexColorEnabled = true;
-            _effect.TextureEnabled = true;
-            _effect.PreferPerPixelLighting = true;
+            //_effect.Alpha = 1.0f;
+            //_effect.VertexColorEnabled = true;
+            //_effect.TextureEnabled = true;
+            //_effect.PreferPerPixelLighting = true;
            // _effect.LightingEnabled = true;
          //   _effect.EnableDefaultLighting();
 
@@ -84,10 +85,10 @@ namespace ThreeD.PrimtiveBatch
             // initialize the deferred RTs
             var bbWidth = device.PresentationParameters.BackBufferWidth;
             var bbHeight = device.PresentationParameters.BackBufferHeight;
-            _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
-            _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
-            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, true, SurfaceFormat.Single, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
-
+            _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, false, 
+                SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+            _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Single, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
 
 
 
@@ -130,7 +131,7 @@ namespace ThreeD.PrimtiveBatch
             //scene.DrawScene(camera, gameTime);
            
 
-
+           
             // set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
             _effect.Projection = projectionMatrix;
             _effect.View = viewMatrix;
@@ -138,12 +139,14 @@ namespace ThreeD.PrimtiveBatch
 
            
             _device.DepthStencilState = DepthStencilState.Default;
-            _device.RasterizerState = RasterizerState.CullCounterClockwise;
+            _device.RasterizerState = RasterizerState.CullClockwise;
+            _device.BlendState = BlendState.NonPremultiplied;
+            //RenderGBufferEffect.Parameters["World"].SetValue(Matrix.Identity);
+            //RenderGBufferEffect.Parameters["View"].SetValue(viewMatrix);
+            //RenderGBufferEffect.Parameters["Projection"].SetValue(projectionMatrix);
 
-            RenderGBufferEffect.Parameters["World"].SetValue(Matrix.Identity);
-            RenderGBufferEffect.Parameters["View"].SetValue(viewMatrix);
-            RenderGBufferEffect.Parameters["Projection"].SetValue(projectionMatrix);
-            
+            RenderGBufferEffect.Parameters["WorldViewProj"].SetValue(
+                _worldMatrix * viewMatrix * projectionMatrix);
 
             // time to iterate over all the batches. 
             // each batch will effect graphics device configurations. 
@@ -153,40 +156,56 @@ namespace ThreeD.PrimtiveBatch
                 _effect.Texture = batch.Config.Texture;
                 _device.SamplerStates[0] = batch.Config.SamplerState;
                 
-                //RenderGBufferEffect.Parameters["Texture"].SetValue(batch.Config.Texture);
+                RenderGBufferEffect.Parameters["Texture"].SetValue(batch.Config.Texture);
 
                 // get vertex data and index data, and set the graphics device to use them
                 var vBuffer = GetVBOForBatch(batch);
                 var iBuffer = GetIBOForBatch(batch);
+
+                var verts = batch.VertexArray;
+
                 vBuffer.SetData(batch.VertexArray);
                 iBuffer.SetData(batch.IndexArray);
                 _device.SetVertexBuffer(vBuffer);
                 _device.Indices = iBuffer;
 
                 // actually do the draw call. 
-                foreach (EffectPass pass in RenderGBufferEffect.Techniques[0].Passes)
+
+                //RenderGBufferEffect.CurrentTechnique = RenderGBufferEffect.Techniques["Technique1"];
+                foreach (EffectPass pass in RenderGBufferEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply(); // sends pass to gfx. 
                     _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, batch.GetIndexArrayLength() / 3);
                 }
-
             });
 
-            // optionally display the texture atlas. 
-            //if (AtlasShown)
-            //{
-            //    _sb.Begin();
-            //    _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
-            //    _sb.End();
-            //}
-
-            ResolveGBuffer();
+          
             HasBegun = false;
 
+            ResolveGBuffer();
 
-            _sb.Begin();
-            _sb.Draw(_colorRT, Vector2.Zero, Color.White);
+
+            int halfWidth = _device.Viewport.Width / 2;
+            int halfHeight = _device.Viewport.Height / 2;
+            _device.Clear(Color.White);
+            _sb.Begin(SpriteSortMode.Immediate,
+                BlendState.Opaque);
+            //_sb.Draw(_normalRT, Vector2.Zero, Color.White);
+            _sb.Draw(_colorRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_normalRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_depthRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
             _sb.End();
+
+
+            // optionally display the texture atlas. 
+            if (AtlasShown)
+            {
+                _sb.Begin();
+                _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
+                _sb.End();
+            }
+
+
         }
 
         #endregion
@@ -270,6 +289,29 @@ namespace ThreeD.PrimtiveBatch
         }
 
         #endregion
+
+        #region Sphere Methods
+
+        public void Sphere(Vector3 position, Vector3 size, float radius)
+        {
+            // do it all.
+
+            var batch = GetBatch(_pixel, SamplerState.LinearWrap);
+
+            var oldVertexCount = batch.GetVertexArrayLength();
+
+            for (var i = 0; i < SphereVerts.Length; i++)
+            {
+                var vert = SphereVerts[i];
+                batch.AddVertex(new VertexPositionColorNormalTexture(
+                    position + vert.Position * size * radius, vert.Color, vert.TextureCoordinate, vert.Normal));
+
+            }
+            batch.AddSomeIndicies(SphereIndicies, (short) oldVertexCount);
+        }
+
+        #endregion
+
 
         #region Helper Methods
 
@@ -432,6 +474,7 @@ namespace ThreeD.PrimtiveBatch
 
         public Effect ClearGBufferEffect { get; set; }
         public Effect RenderGBufferEffect { get; set; }
+        public Effect PassThroughEffect { get; set; }
 
         private void SetGBuffer()
         {
@@ -441,33 +484,22 @@ namespace ThreeD.PrimtiveBatch
 
         private void ResolveGBuffer()
         {
-            RenderTarget2D blank = null; // TODO is this broken? lololol
-            //_device.SetRenderTarget(blank, 0);
-            //_device.SetRenderTarget(blank, 1);
-            //_device.SetRenderTarget(blank, 2);
             _device.SetRenderTarget(null);
-            //_device.SetRenderTargets(blank,blank, blank);
         }
 
         private void ClearGBuffer()
         {
 
-            //foreach (EffectPass pass in ClearGBufferEffect.Techniques[0].Passes)
-            //{
-            //    pass.Apply(); // sends pass to gfx. 
-            //    SpriteBatch
-            //}
             _sb.Begin(SpriteSortMode.Immediate,
-                BlendState.NonPremultiplied,
-                SamplerState.LinearClamp,
-                DepthStencilState.Default,
+                BlendState.Opaque,
+                SamplerState.PointClamp,
+                DepthStencilState.DepthRead,
                 RasterizerState.CullNone,
                 ClearGBufferEffect);
             _sb.Draw(_pixel,
-                new Rectangle(0, 0, _device.PresentationParameters.BackBufferWidth,
-                    _device.PresentationParameters.BackBufferHeight), Color.White);
+                new Rectangle(-1, -1, 2, 2), Color.White);
+
             _sb.End();
-            //quadRenderer.Render(Vector2.One * -1, Vector2.One);
         }
 
 
@@ -476,20 +508,156 @@ namespace ThreeD.PrimtiveBatch
 
         #region Unit Elements
 
+
+        static PrimitiveBatch()
+        {
+            // work in here to create sphere points. 
+            SphereVerts = MakeUnitSphere(12, 15);
+
+
+        }
+
+        private static short[] SphereIndicies;
+        private static VertexPositionColorNormalTexture[] MakeUnitSphere(int circleNum, int radialNum)
+        {
+
+            var verts = new List<VertexPositionColorNormalTexture>();
+
+            var indicies = new List<short>();
+            // circleNum * radiulNum * 6 + 6 * radialNum 
+            // 6 * radialNum (circleNum + 1)
+
+
+            for (var i = 0f; i < circleNum; i++)
+            {
+                var totalCircleNum = circleNum + 1;
+                var v = (i + 1)/totalCircleNum;
+
+                for (var j = 0; j < radialNum; j++)
+                {
+                    var theta = j*MathHelper.TwoPi/radialNum; // todo optimize speed
+
+                    var y = (v - .5f) * 2;
+                    //var modifiedRadius = .5f * radius * Math.Sin(v * Math.PI);
+                    var stupid = ( v*2 -1);
+                    var stupidArg = 1 - Math.Pow(stupid, 2);
+
+                    var modifiedRadius = Math.Sqrt(stupidArg);
+
+                    
+                    // input is [0,1]
+                    // output [1, 0, 1]     0 -> 1,     .5 -> 0,    1 -> 1
+
+
+                    var x = (float) ( modifiedRadius*Math.Cos(theta) );
+                    var z = (float) ( modifiedRadius*Math.Sin(theta) );
+                   
+                    var normal = new Vector3(x, y, z);
+
+                    if (Math.Abs(normal.Length() - 1f) > 0.001f || float.IsNaN(x) || float.IsNaN(y) || float.IsNaN(z))
+                    {
+                        Console.WriteLine("NOOOOO");
+                    }
+
+                    normal.Normalize(); // todo maybe we don't need this depending on WHEN the radius multiplication happens
+
+                    verts.Add(new VertexPositionColorNormalTexture(
+                        new Vector3(x, y, z), Color.LimeGreen, Vector2.Zero, normal));
+
+
+                  
+                }
+            }
+
+            // TODO later, generate top and bott
+            var top = new Vector3(0, 1, 0);
+            var bot = new Vector3(0, -1, 0);
+
+            verts.Add(new VertexPositionColorNormalTexture(
+                top, Color.LimeGreen, Vector2.Zero, Vector3.UnitY));
+            var topIndex = verts.Count - 1;
+
+            verts.Add(new VertexPositionColorNormalTexture(
+                bot, Color.LimeGreen, Vector2.Zero, -Vector3.UnitY));
+            var botIndex = verts.Count - 1;
+
+
+            // making the indecies!
+            var calcVertNum = new Func<int, int, int>((i, j) => i*radialNum + j);
+            for (var i = 0; i < circleNum -1; i++)
+            {
+                for (var j = 0; j < radialNum; j++)
+                {
+                    var topLeft = (short)(i * radialNum + j);
+                    var topRight = (short) ((topLeft + 1) );
+                    if (topRight >= (i + 1)*radialNum)
+                    {
+                        topRight -= (short) radialNum;
+                    }
+
+
+                    var botLeft = (short) (topLeft + radialNum);
+                    var botRight = (short) ( (botLeft + 1)  );
+                    if (botRight >= (i+2) *radialNum)
+                    {
+                        botRight -= (short)radialNum;
+                    }
+
+                    if (topLeft == 5 || topRight == 5 || botLeft == 5 || botRight == 5)
+                    {
+                        
+                    }
+
+                    indicies.Add(  topLeft);
+                    indicies.Add(  botLeft);
+                    indicies.Add(  botRight);
+
+                    indicies.Add(  topLeft);
+                    indicies.Add(  botRight);
+                    indicies.Add(  topRight);
+                }
+            }
+
+            for (short j = 0; j < radialNum; j++)
+            {
+                indicies.Add((short)botIndex);
+                indicies.Add(j);
+                indicies.Add((short)((j + 1) % radialNum));
+
+                indicies.Add((short)topIndex);
+                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
+                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
+
+            }
+
+            SphereIndicies = indicies.ToArray();
+            return verts.ToArray();
+        }
+
+
+        private static VertexPositionColorNormalTexture[] SphereVerts = null; 
+
+
+
         /// <summary>
         /// This is a unit quad.
         /// </summary>
         private static readonly List<VertexPositionColorNormalTexture> UnitQuad =
             new VertexPositionColorNormalTexture[]
             {
-                new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0),
-                    new Vector3(0, 0, -1)),
-                new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0),
-                    new Vector3(0, 0, -1)),
-                new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0),
-                    new Vector3(0, 0, -1)),
+                
                 new VertexPositionColorNormalTexture(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0),
-                    new Vector3(0, 0, -1)),
+                    new Vector3(0, 0, -1)), // 4
+                
+                
+                new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)), // 3
+
+                    new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)), // 2
+
+                    new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0),
+                    new Vector3(0, 0, -1)), // 1 
             }.ToList().Translate(new Vector3(-.5f, -.5f, 0));
 
         /// <summary>

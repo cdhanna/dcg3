@@ -75,6 +75,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="PrimtiveBatch\Effects\ClearGBuffer.fx" />
+    <Content Include="PrimtiveBatch\Effects\PassThrough.build.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PrimtiveBatch\Effects\PassThrough.fx" />
     <Content Include="PrimtiveBatch\Effects\RenderGBuffer.build.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
