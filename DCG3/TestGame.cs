@@ -80,8 +80,8 @@ namespace DCG3
             base.Initialize();
         }
 
-      
 
+        private float camAngle, camAngle2, objsAngle;
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -96,32 +96,32 @@ namespace DCG3
 
             if (KeyboardHelper.IsKeyDown(Keys.A))
             {
-                a -= .01f;
+                camAngle -= .01f;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.D))
             {
-                a += .01f;
+                camAngle += .01f;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.W))
             {
-                b -= .01f;
+                camAngle2 -= .01f;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.S))
             {
-                b += .01f;
+                camAngle2 += .01f;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.Q))
             {
-                c -= .01f;
+                objsAngle -= .01f;
             }
 
             if (KeyboardHelper.IsKeyDown(Keys.E))
             {
-                c += .01f;
+                objsAngle += .01f;
             }
 
 
@@ -129,7 +129,7 @@ namespace DCG3
             base.Update(gameTime);
         }
 
-        private float a = 0,  b = 0, c = 0 ;
+
 
         protected override void Draw(GameTime gameTime)
         {
@@ -146,15 +146,19 @@ namespace DCG3
 
             //_level.Draw(_pBatch);
             //_plr.Draw(_pBatch);
-            var r = c + 5;
-            _cam.Position = new Vector3(r* (float)Math.Cos(a), 0, r* (float)Math.Sin(a));
+            //_cam.Position = Vector3.Transform(new Vector3(5, 0, 0), Matrix.CreateFromYawPitchRoll(camAngle, 0, camAngle2));
+            var r = 5;
+            _cam.Position = new Vector3(r * (float)Math.Cos(camAngle), 1, r * (float)Math.Sin(camAngle));
             _cam.Target = Vector3.Zero;
            // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
 
-            _pBatch.Sphere(Vector3.Zero + Vector3.UnitX * b, Vector3.One, .6f);
+            _pBatch.Sphere(Vector3.Zero + Vector3.UnitX * objsAngle, Vector3.One, .6f);
+
+            _pBatch.AtlasShown = true;
             _pBatch.Cube(new Vector3(0, 1, 3), Vector3.One, Quaternion.Identity, _texAgu );
-            _pBatch.Sphere(Vector3.Zero + Vector3.UnitY * 2, new Vector3(1, 1, 2),  1);
+
+            
             //_pBatch.AtlasShown = true;
             _pBatch.Flush(view, _cam.ProjectionMatrix);
 

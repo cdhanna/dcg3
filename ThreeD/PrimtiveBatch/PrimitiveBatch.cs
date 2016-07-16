@@ -140,7 +140,7 @@ namespace ThreeD.PrimtiveBatch
            
             _device.DepthStencilState = DepthStencilState.Default;
             _device.RasterizerState = RasterizerState.CullClockwise;
-            _device.BlendState = BlendState.NonPremultiplied;
+            _device.BlendState = BlendState.Opaque;
             //RenderGBufferEffect.Parameters["World"].SetValue(Matrix.Identity);
             //RenderGBufferEffect.Parameters["View"].SetValue(viewMatrix);
             //RenderGBufferEffect.Parameters["Projection"].SetValue(projectionMatrix);
@@ -218,19 +218,19 @@ namespace ThreeD.PrimtiveBatch
 
         public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color)
         {
-            Cube(position, size, rotation, color, null, Vector2.One, Vector2.One, SamplerState.LinearClamp, TextureStyle.PerQuad);
+            Cube(position, size, rotation, color, null, Vector2.One, Vector2.Zero, SamplerState.LinearClamp, TextureStyle.PerQuad);
         }
 
         public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture,
             TextureStyle textureStyle = TextureStyle.PerQuad)
         {
-            Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.One, SamplerState.LinearClamp, textureStyle);
+            Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.Zero, SamplerState.LinearClamp, textureStyle);
         }
 
         public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale,
             SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad)
         {
-            Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.One, samplerState, textureStyle);
+            Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.Zero, samplerState, textureStyle);
         }
 
         /// <summary>
@@ -447,7 +447,7 @@ namespace ThreeD.PrimtiveBatch
                 for (int i = 0; i < 4; i++)
                 {
                     var x = (i == 1 || i == 2 ? s : (s + 1)) / 6f;
-                    var y = i == 2 || i == 3 ? 1 : 0;
+                    var y = i == 2 || i == 3 ? 0 : 1;
 
                     if (style == TextureStyle.PerQuad)
                     {
@@ -491,9 +491,9 @@ namespace ThreeD.PrimtiveBatch
         {
 
             _sb.Begin(SpriteSortMode.Immediate,
-                BlendState.Opaque,
+                BlendState.NonPremultiplied,
                 SamplerState.PointClamp,
-                DepthStencilState.DepthRead,
+                DepthStencilState.Default,
                 RasterizerState.CullNone,
                 ClearGBufferEffect);
             _sb.Draw(_pixel,
