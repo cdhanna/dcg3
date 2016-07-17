@@ -25,10 +25,12 @@ struct VertexShaderInput
 	float4 Position : POSITION0;
 	float3 Normal : NORMAL0;
 	float2 TexCoord : TEXCOORD0;
+	float4 Color : COLOR0;
 };
 struct VertexShaderOutput
 {
 	float4 Position : POSITION0;
+	float4 Color: COLOR0;
 	float2 TexCoord : TEXCOORD0;
 	float3 Normal : TEXCOORD1;
 	float2 Depth : TEXCOORD2;
@@ -45,6 +47,7 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	output.Normal = input.Normal;               //get normal into world space
 	output.Depth.x = output.Position.z;
 	output.Depth.y = output.Position.w;
+	output.Color = input.Color;
 	return output;
 }
 
@@ -59,7 +62,7 @@ PixelShaderOutput PixelShaderFunction(VertexShaderOutput input)
 {
 	PixelShaderOutput output;
 	
-	output.Color = tex2D(diffuseSampler, input.TexCoord);            //output Color
+	output.Color = tex2D(diffuseSampler, input.TexCoord) * input.Color;            //output Color
 	output.Color.a = specularIntensity;                                              //output SpecularIntensity
 	
 	output.Normal.rgb = 0.5f * (normalize(input.Normal) + 1.0f);    //transform normal domain
