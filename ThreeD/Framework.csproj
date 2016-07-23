@@ -47,8 +47,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomVertexDecleration.cs" />
+    <Compile Include="Physics\Colliders\CollisionData.cs" />
+    <Compile Include="Physics\Colliders\ICollider.cs" />
+    <Compile Include="Physics\Contact.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
     <Compile Include="PrimtiveBatch\BatchConfig.cs" />
+    <Compile Include="Util\VectorExtensions.cs" />
     <Content Include="PrimtiveBatch\Effects\CombineFinal.build.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
