@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace ThreeD.Menu
+namespace DCG.Framework.Menu
 {
     public abstract class MenuComponent
     {

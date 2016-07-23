@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace ThreeD.Util
+namespace DCG.Framework.Util
 {
     public class Rand
     {

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ThreeD;
-using ThreeD.PrimtiveBatch;
+using DCG.Framework;
+using DCG.Framework.PrimtiveBatch;
 
 namespace DCG3.GameLogic
 {

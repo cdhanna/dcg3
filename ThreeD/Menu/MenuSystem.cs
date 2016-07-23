@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ThreeD.Menu
+namespace DCG.Framework.Menu
 {
     /// <summary>
     /// The menu system is meant to provide a 1 stop shop for menu'ing

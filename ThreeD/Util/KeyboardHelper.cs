@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework.Input;
 
-namespace ThreeD.Util
+namespace DCG.Framework.Util
 {
     public class KeyboardHelper
     {

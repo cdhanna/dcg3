@@ -61,11 +61,11 @@ struct PixelShaderOutput
 PixelShaderOutput PixelShaderFunction(VertexShaderOutput input)
 {
 	PixelShaderOutput output;
-	
+	//output.Color = input.Color;
 	output.Color = tex2D(diffuseSampler, input.TexCoord) * input.Color;            //output Color
 	output.Color.a = specularIntensity;                                              //output SpecularIntensity
 	
-	output.Normal.rgb = 0.5f * (normalize(input.Normal) + 1.0f);    //transform normal domain
+	output.Normal.rgb = 0.5f * (normalize(-input.Normal) + 1.0f);    //transform normal domain
 	output.Normal.a = specularPower;                                            //output SpecularPower
 
 	output.Depth = input.Depth.x / input.Depth.y;                           //output Depth

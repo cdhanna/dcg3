@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using ThreeD.Menu.Components;
+using DCG.Framework.Menu.Components;
 
-namespace ThreeD.Menu
+namespace DCG.Framework.Menu
 {
     public static class MenuComposer
     {

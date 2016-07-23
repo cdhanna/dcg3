@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace ThreeD.Menu.Components
+namespace DCG.Framework.Menu.Components
 {
     public class MenuDataLabel : MenuContainer
     {

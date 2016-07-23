@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ThreeD.PrimtiveBatch
+namespace DCG.Framework.PrimtiveBatch
 {
     public interface IPrimitiveBatch
     {
@@ -23,9 +23,14 @@ namespace ThreeD.PrimtiveBatch
         void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
 
-        void Sphere(Vector3 position, Vector3 size,  float radius);
+        void Sphere(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture);
 
-        void Flush(Matrix viewMatrix, Matrix projectionMatrix);
+
+        void LightDirectional(Vector3 direction, Color color);
+        void LightPoint(Vector3 position, Color color, float radius, float intensity);
+
+
+        void Flush(Color ambient, Vector3 cameraPosition, Matrix viewMatrix, Matrix projectionMatrix);
     }
 
     public enum TextureStyle

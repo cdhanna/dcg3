@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ThreeD
+namespace DCG.Framework
 {
     internal struct VertexPositionColorNormalTexture : IVertexType
     {

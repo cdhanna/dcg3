@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.Xna.Framework;
-using ThreeD;
-using ThreeD.PrimtiveBatch;
+using DCG.Framework;
+using DCG.Framework.PrimtiveBatch;
 
 namespace DCG3.GameLogic
 {

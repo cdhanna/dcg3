@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ThreeD.Util;
+using DCG.Framework.Util;
 
 namespace DCG3.GameLogic
 {
@@ -23,7 +23,7 @@ namespace DCG3.GameLogic
         {
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(45f),
-                device.DisplayMode.AspectRatio, .01f, 100f);
+                device.DisplayMode.AspectRatio, .1f, 60f);
             Position = Vector3.Zero;
             Target = Vector3.Zero;
             Up = Vector3.Up;

@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{47FDBD
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThreeD", "ThreeD\ThreeD.csproj", "{32BD0D8F-160B-44A8-8D76-8FC292475249}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework", "ThreeD\Framework.csproj", "{32BD0D8F-160B-44A8-8D76-8FC292475249}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

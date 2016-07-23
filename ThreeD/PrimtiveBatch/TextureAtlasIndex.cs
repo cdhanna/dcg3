@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace ThreeD.PrimtiveBatch
+namespace DCG.Framework.PrimtiveBatch
 {
     /// <summary>
     /// The TextureAtlasIndex holds the position and size of a texture inside the texture atlas.

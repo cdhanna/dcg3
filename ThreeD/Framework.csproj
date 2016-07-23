@@ -7,8 +7,8 @@
     <ProjectGuid>{32BD0D8F-160B-44A8-8D76-8FC292475249}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ThreeD</RootNamespace>
-    <AssemblyName>ThreeD</AssemblyName>
+    <RootNamespace>DCG.Framework</RootNamespace>
+    <AssemblyName>Framework</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
@@ -49,6 +49,16 @@
     <Compile Include="CustomVertexDecleration.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
     <Compile Include="PrimtiveBatch\BatchConfig.cs" />
+    <Content Include="PrimtiveBatch\Effects\CombineFinal.build.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PrimtiveBatch\Effects\CombineFinal.fx" />
+    <Content Include="PrimtiveBatch\Effects\DirectionalLight.build.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PrimtiveBatch\Effects\DirectionalLight.fx" />
+    <Compile Include="PrimtiveBatch\EffectHelpers.cs" />
+    <Compile Include="PrimtiveBatch\FullScreenQuad.cs" />
     <Compile Include="PrimtiveBatch\IPrimitiveBatch.cs" />
     <Compile Include="Menu\Components\DataList.cs" />
     <Compile Include="Menu\Components\DataLabel.cs" />
@@ -58,6 +68,7 @@
     <Compile Include="Menu\MenuRenderer.cs" />
     <Compile Include="Menu\MenuSystem.cs" />
     <Compile Include="PrimtiveBatch\Batch.cs" />
+    <Compile Include="PrimtiveBatch\Light.cs" />
     <Compile Include="PrimtiveBatch\PrimitiveBatch.cs" />
     <Compile Include="PrimtiveBatch\TextureAtlas.cs" />
     <Compile Include="PrimtiveBatch\TextureAtlasIndex.cs" />
@@ -79,6 +90,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="PrimtiveBatch\Effects\PassThrough.fx" />
+    <Content Include="PrimtiveBatch\Effects\PointLight.build.fx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="PrimtiveBatch\Effects\PointLight.fx" />
     <Content Include="PrimtiveBatch\Effects\RenderGBuffer.build.fx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

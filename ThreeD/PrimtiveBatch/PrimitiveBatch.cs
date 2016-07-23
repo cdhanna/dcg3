@@ -9,9 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ThreeD.PrimtiveBatch;
+using DCG.Framework.PrimtiveBatch;
 
-namespace ThreeD.PrimtiveBatch
+namespace DCG.Framework.PrimtiveBatch
 {
 
     public class PrimitiveBatch : IPrimitiveBatch
@@ -30,12 +30,28 @@ namespace ThreeD.PrimtiveBatch
         private readonly BatchCollection _batchColl;
         private readonly TextureAtlas _atlas;
 
-        private RenderTarget2D _colorRT, _normalRT, _depthRT; // the mysterious deferred render targets... 
+        private RenderTarget2D _colorRT, _normalRT, _depthRT, _lightRT, _finalRT; // the mysterious deferred render targets... 
+        private Vector2 _halfPixel;
+
+        private List<DirectionalLight> _directionalLights;
+        private List<PointLight> _pointLights;
+
+        private VertexBuffer _pointLightVbuffer;
+        private IndexBuffer _pointLightIBuffer;
+
 
         // the _batchVBOTable and _batchIBOTable are tables that point that hold an ongoing buffer for a given batch config, across begin/flush cycles.
         private Dictionary<BatchConfig, DynamicVertexBuffer> _batchVBOTable;
         private Dictionary<BatchConfig, DynamicIndexBuffer> _batchIBOTable;
-        
+
+        public Effect ClearGBufferEffect { get; set; }
+        public Effect RenderGBufferEffect { get; set; }
+        public Effect PassThroughEffect { get; set; }
+        public Effect DirectionalLightEffect { get; set; }
+        public Effect CombineFinalEffect { get; set; }
+        public Effect PointLightEffect { get; set; }
+        private FullScreenQuad quad;
+
         #endregion
 
         #region Public Properties ...
@@ -79,19 +95,30 @@ namespace ThreeD.PrimtiveBatch
            // _effect.LightingEnabled = true;
          //   _effect.EnableDefaultLighting();
 
+            _directionalLights = new List<DirectionalLight>();
+            _pointLights = new List<PointLight>();
+
+
+            _pointLightVbuffer = new VertexBuffer(_device, typeof(VertexPositionColorNormalTexture), SphereVerts.Length, BufferUsage.None);
+            _pointLightIBuffer = new IndexBuffer(_device, typeof (short), SphereIndicies.Length, BufferUsage.None);
+            _pointLightVbuffer.SetData(SphereVerts);
+            _pointLightIBuffer.SetData(SphereIndicies);
+
+
             HasBegun = false;
 
 
             // initialize the deferred RTs
             var bbWidth = device.PresentationParameters.BackBufferWidth;
             var bbHeight = device.PresentationParameters.BackBufferHeight;
-            _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, false, 
-                SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
-            _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
-            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Single, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
+            _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
+            _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.None); // TODO watch out for depth format, its shifty... 
+            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Single, DepthFormat.None); // TODO watch out for depth format, its shifty... 
+            _lightRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
+            _finalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
+            _halfPixel = new Vector2(.5f / bbWidth, .5f / bbHeight);
 
-
-
+            quad = new FullScreenQuad(_device);
 
         }
 
@@ -110,6 +137,8 @@ namespace ThreeD.PrimtiveBatch
                 throw new Exception("The batch has already begun. It must be ended before another can begin");
             }
             _batchColl.Clear();
+            _directionalLights.Clear();
+            _pointLights.Clear();
             HasBegun = true;
         }
 
@@ -118,7 +147,7 @@ namespace ThreeD.PrimtiveBatch
         /// </summary>
         /// <param name="viewMatrix">The view matrix that will be used to draw all the cubes</param>
         /// <param name="projectionMatrix">the projection matrix that will be used to draw all the cubes</param>
-        public void Flush(Matrix viewMatrix, Matrix projectionMatrix)
+        public void Flush(Color ambient, Vector3 camPosition, Matrix viewMatrix, Matrix projectionMatrix)
         {
             if (!HasBegun) // double check that we aren't flushing without ever having started the batch
             {
@@ -128,22 +157,16 @@ namespace ThreeD.PrimtiveBatch
 
             SetGBuffer();
             ClearGBuffer();
-            //scene.DrawScene(camera, gameTime);
-           
+          
+            ////// set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
+            //////_effect.Projection = projectionMatrix;
+            //////_effect.View = viewMatrix;
+            //////_effect.World = _worldMatrix;
 
-           
-            // set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
-            _effect.Projection = projectionMatrix;
-            _effect.View = viewMatrix;
-            _effect.World = _worldMatrix;
 
-           
             _device.DepthStencilState = DepthStencilState.Default;
             _device.RasterizerState = RasterizerState.CullClockwise;
             _device.BlendState = BlendState.Opaque;
-            //RenderGBufferEffect.Parameters["World"].SetValue(Matrix.Identity);
-            //RenderGBufferEffect.Parameters["View"].SetValue(viewMatrix);
-            //RenderGBufferEffect.Parameters["Projection"].SetValue(projectionMatrix);
 
             RenderGBufferEffect.Parameters["WorldViewProj"].SetValue(
                 _worldMatrix * viewMatrix * projectionMatrix);
@@ -155,7 +178,7 @@ namespace ThreeD.PrimtiveBatch
                 // set the texture and sampler state for this batch.
                 _effect.Texture = batch.Config.Texture;
                 _device.SamplerStates[0] = batch.Config.SamplerState;
-                
+
                 RenderGBufferEffect.Parameters["Texture"].SetValue(batch.Config.Texture);
 
                 // get vertex data and index data, and set the graphics device to use them
@@ -171,7 +194,6 @@ namespace ThreeD.PrimtiveBatch
 
                 // actually do the draw call. 
 
-                //RenderGBufferEffect.CurrentTechnique = RenderGBufferEffect.Techniques["Technique1"];
                 foreach (EffectPass pass in RenderGBufferEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply(); // sends pass to gfx. 
@@ -182,30 +204,102 @@ namespace ThreeD.PrimtiveBatch
           
             HasBegun = false;
 
-            ResolveGBuffer();
+            
+
+            DrawLights(camPosition, viewMatrix, projectionMatrix);
 
 
+            _device.RasterizerState = RasterizerState.CullCounterClockwise;
+            CombineLights(ambient);
+
+
+            _device.SetRenderTarget(null);
             int halfWidth = _device.Viewport.Width / 2;
             int halfHeight = _device.Viewport.Height / 2;
-            _device.Clear(Color.White);
-            _sb.Begin(SpriteSortMode.Immediate,
-                BlendState.Opaque);
-            //_sb.Draw(_normalRT, Vector2.Zero, Color.White);
+           // _device.Clear(Color.Purple);
+           // _device.BlendState = BlendState.AlphaBlend;
+            //_sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
+            _sb.Begin();
+            //_sb.Draw(_colorRT, Vector2.Zero, Color.White);
             _sb.Draw(_colorRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
             _sb.Draw(_normalRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
-            _sb.Draw(_depthRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_lightRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_finalRT, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
             _sb.End();
 
+           
 
             // optionally display the texture atlas. 
             if (AtlasShown)
             {
-                _sb.Begin();
-                _sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
-                _sb.End();
+                //_sb.Begin();
+                //_sb.Draw(_atlas.Texture, new Rectangle(0, 0, 100, 100), new Color(1f, 1f, 1f, .5f));
+                //_sb.End();
             }
 
 
+        }
+
+        private void DrawLights(Vector3 camPosition, Matrix view, Matrix proj)
+        {
+
+            _device.SetRenderTarget(_lightRT);
+            _device.Clear(Color.TransparentBlack);
+
+            var lightBlender = new BlendState();
+            lightBlender.AlphaBlendFunction = BlendFunction.Add;
+            lightBlender.AlphaSourceBlend = Blend.One;
+            lightBlender.AlphaDestinationBlend = Blend.One;
+            lightBlender.ColorBlendFunction = BlendFunction.Add;
+            lightBlender.ColorSourceBlend = Blend.One;
+            lightBlender.ColorDestinationBlend = Blend.One;
+            _device.BlendState = lightBlender;
+
+
+            //draw some lights
+            _device.DepthStencilState = DepthStencilState.DepthRead;
+            _pointLights.ForEach(d => DrawPointLight(d, camPosition, view, proj));
+
+            _directionalLights.ForEach(d => DrawDirectionalLight(d, camPosition, view, proj));
+
+        }
+
+        private void CombineLights(Color ambient)
+        {
+            _device.SetRenderTarget(_finalRT);
+            CombineFinalEffect.Parameters.TrySet("colorMap", _colorRT);
+            //CombineFinalEffect.Parameters["colorMap"].SetValue(_colorRT);
+            CombineFinalEffect.Parameters["lightMap"].SetValue(_lightRT);
+            CombineFinalEffect.Parameters["halfPixel"].SetValue(_halfPixel);
+
+            CombineFinalEffect.Parameters["ambient"].SetValue(ambient.ToVector4());
+
+            foreach (EffectPass pass in CombineFinalEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply(); // sends pass to gfx. 
+                quad.Draw(_device);
+                //quad.Draw(_device, new Vector2(.5f, -.5f), new Vector2(.5f, .5f));
+            }
+        }
+
+        #endregion
+
+
+        #region Lighting Methods
+
+        public void LightDirectional(Vector3 direction, Color color)
+        {
+            // create the light
+            var light = new DirectionalLight(direction, color);
+
+            // and stash the light
+            _directionalLights.Add(light);
+        }
+
+        public void LightPoint(Vector3 position, Color color, float radius, float intensity)
+        {
+            var light = new PointLight(position, radius, intensity, color);
+            _pointLights.Add(light);
         }
 
         #endregion
@@ -218,7 +312,7 @@ namespace ThreeD.PrimtiveBatch
 
         public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color)
         {
-            Cube(position, size, rotation, color, null, Vector2.One, Vector2.Zero, SamplerState.LinearClamp, TextureStyle.PerQuad);
+            Cube(position, size, rotation, color, null, Vector2.One, Vector2.Zero, SamplerState.PointClamp, TextureStyle.PerQuad);
         }
 
         public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture,
@@ -260,13 +354,14 @@ namespace ThreeD.PrimtiveBatch
 
             if (samplerState == null) // normally we use the texture atlas, and the samplerState is clamped
             {
-                samplerState = SamplerState.LinearClamp;
+                samplerState = SamplerState.AnisotropicClamp;
             }
-
+            
             // working variables. 
             Batch batch;
             var inAtlas = false;
 
+            ///samplerState = SamplerState.LinearWrap; // TODO HACK.
             
             if (samplerState.Equals(SamplerState.LinearClamp)
                 || samplerState.Equals(SamplerState.PointClamp)
@@ -279,32 +374,74 @@ namespace ThreeD.PrimtiveBatch
             {
                 batch = GetBatch(texture, SamplerState.LinearWrap);
             }
+            var oldVertexCount = batch.GetVertexArrayLength();
 
             // this is jenky. 
             // the ApplyCubeDetails function is going to put vertex data directly into the batch
             ApplyCubeDetails(batch, position, size, rotation, color, textureStyle, textureScale, textureOffset, texture, inAtlas);
             // and the addcubeIndicies function will add index data directly into the batch
-            batch.AddCubeIndicies();
+            //batch.AddCubeIndicies();
 
+            batch.AddSomeIndicies(CubeIndicies, (short)oldVertexCount);
         }
 
         #endregion
 
         #region Sphere Methods
 
-        public void Sphere(Vector3 position, Vector3 size, float radius)
+        public void Sphere(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture)
         {
-            // do it all.
 
-            var batch = GetBatch(_pixel, SamplerState.LinearWrap);
+            // TODO implement rotation
+
+            if (texture == null)
+            {
+                texture = _pixel;
+            }
+
+            var batch = GetBatch(texture, SamplerState.LinearWrap);
 
             var oldVertexCount = batch.GetVertexArrayLength();
 
+            var textureOffset = Vector2.Zero;
+            var textureScale = Vector2.One;
+            var inAtlas = false;
+
+            var applyTexOffset = new Func<Vector2, Vector2>(v => (v + textureOffset));
+
+            // the transformUV func is used to modify the standard cube UV coordinate to map into atlas version, or to simply wrap the texture around the cube. 
+            var transformUV = new Func<Vector2, Vector2>(v => applyTexOffset(v) * textureScale); // this is the 'wrap' version, where the atlas isn't being used.
+
+            var texIndex = new TextureAtlasIndex(); // start as undefined.
+            if (inAtlas)
+            {
+                texIndex = _atlas.EnsureTexture(texture); // plot the texture in the atlas
+
+                // set the func to transform the UV to the atlas coordinate system.
+                var atlasSize = new Vector2(_atlas.TextureSize, _atlas.TextureSize);
+                var ratio = texIndex.Size / atlasSize;
+                transformUV = (v => (applyTexOffset(v) * textureScale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
+            }
+
+            var inversePi = 1/MathHelper.Pi;
             for (var i = 0; i < SphereVerts.Length; i++)
             {
                 var vert = SphereVerts[i];
+
+                var v = (vert.Position.Y + 1) * .5f;
+                var u = (float) (Math.Atan2(vert.Position.Z, vert.Position.X)*inversePi );
+                u = u >= 0 ? u/2f : (u/2f + 1);
+
+                //if (vert.Position.Z == 0 && vert.Position.X == 0)
+                //{
+                //    //u = .5f;
+                //}
+
                 batch.AddVertex(new VertexPositionColorNormalTexture(
-                    position + vert.Position * size * radius, vert.Color, vert.TextureCoordinate, vert.Normal));
+                    position + vert.Position * size,
+                    color,
+                    transformUV(new Vector2(u, v)),
+                    vert.Normal));
 
             }
             batch.AddSomeIndicies(SphereIndicies, (short) oldVertexCount);
@@ -472,9 +609,91 @@ namespace ThreeD.PrimtiveBatch
 
         #region DeferredFunctions
 
-        public Effect ClearGBufferEffect { get; set; }
-        public Effect RenderGBufferEffect { get; set; }
-        public Effect PassThroughEffect { get; set; }
+
+        private void DrawPointLight(PointLight light, Vector3 camPosition, Matrix view, Matrix projection)
+        {
+            PointLightEffect.Parameters["colorMap"].SetValue(_colorRT);
+            PointLightEffect.Parameters["normalMap"].SetValue(_normalRT);
+            PointLightEffect.Parameters["depthMap"].SetValue(_depthRT);
+            //compute the light world matrix
+            //scale according to light radius, and translate it to light position
+            Matrix sphereWorldMatrix = Matrix.CreateScale(light.Radius) * Matrix.CreateTranslation(light.Position);
+
+            PointLightEffect.Parameters["World"].SetValue(sphereWorldMatrix);
+            PointLightEffect.Parameters["View"].SetValue(view);
+            PointLightEffect.Parameters["Projection"].SetValue(projection);
+            //light position
+            PointLightEffect.Parameters["lightPosition"].SetValue(light.Position);
+            //set the color, radius and Intensity
+            PointLightEffect.Parameters["Color"].SetValue(light.Color.ToVector3());
+            PointLightEffect.Parameters["lightRadius"].SetValue(light.Radius);
+            PointLightEffect.Parameters["lightIntensity"].SetValue(light.Intensity);
+            //parameters for specular computations
+            PointLightEffect.Parameters["cameraPosition"].SetValue(camPosition);
+            PointLightEffect.Parameters["InvertViewProjection"].SetValue(Matrix.Invert(view * projection));
+            //size of a halfpixel, for texture coordinates alignment
+            PointLightEffect.Parameters["halfPixel"].SetValue(_halfPixel);
+
+            float cameraToCenter = Vector3.Distance(camPosition, light.Position);
+            //if we are inside the light volume, draw the sphere's inside face
+            if (cameraToCenter < light.Radius)
+            {
+
+                _device.RasterizerState = RasterizerState.CullCounterClockwise;
+            }
+            else
+            {
+                _device.RasterizerState = RasterizerState.CullClockwise;
+            }
+            //_device.RasterizerState = RasterizerState.CullNone;
+
+            var dss = new DepthStencilState();
+
+           
+
+            dss.DepthBufferWriteEnable = true;
+            dss.DepthBufferEnable = true;
+            dss.DepthBufferFunction = CompareFunction.Greater;
+
+            //_device.DepthStencilState = dss;
+
+            _device.SetVertexBuffer(_pointLightVbuffer);
+            _device.Indices = _pointLightIBuffer;
+            foreach (EffectPass pass in PointLightEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply(); // sends pass to gfx. 
+                _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, SphereIndicies.Length / 3);
+            }
+
+
+        }
+
+        private void DrawDirectionalLight(DirectionalLight light, Vector3 camPosition, Matrix view, Matrix projection)
+        {
+
+            //set all parameters
+            DirectionalLightEffect.Parameters["colorMap"].SetValue(_colorRT);
+
+            DirectionalLightEffect.Parameters["normalMap"].SetValue(_normalRT);
+            DirectionalLightEffect.Parameters["depthMap"].SetValue(_depthRT);
+            DirectionalLightEffect.Parameters["lightDirection"].SetValue(light.Direction);
+            DirectionalLightEffect.Parameters["Color"].SetValue(light.Color.ToVector3());
+            DirectionalLightEffect.Parameters["cameraPosition"].SetValue(camPosition);
+            DirectionalLightEffect.Parameters["InvertViewProjection"].SetValue(Matrix.Invert(view * projection));
+            DirectionalLightEffect.Parameters["halfPixel"].SetValue(_halfPixel);
+
+            _device.RasterizerState = RasterizerState.CullCounterClockwise;
+            //_device.DepthStencilState = DepthStencilState.None;
+           
+            foreach (EffectPass pass in DirectionalLightEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply(); // sends pass to gfx. 
+                quad.Draw(_device);
+            }
+
+        }
+
+        
 
         private void SetGBuffer()
         {
@@ -490,16 +709,14 @@ namespace ThreeD.PrimtiveBatch
         private void ClearGBuffer()
         {
 
-            _sb.Begin(SpriteSortMode.Immediate,
-                BlendState.NonPremultiplied,
-                SamplerState.PointClamp,
-                DepthStencilState.Default,
-                RasterizerState.CullNone,
-                ClearGBufferEffect);
-            _sb.Draw(_pixel,
-                new Rectangle(-1, -1, 2, 2), Color.White);
+            _device.BlendState = BlendState.Opaque;
+            _device.RasterizerState = RasterizerState.CullNone;
+            foreach (EffectPass pass in ClearGBufferEffect.CurrentTechnique.Passes)
+            {
+                pass.Apply(); // sends pass to gfx. 
+                quad.Draw(_device);
+            }
 
-            _sb.End();
         }
 
 
@@ -517,6 +734,16 @@ namespace ThreeD.PrimtiveBatch
 
         }
 
+
+        private static readonly short[] CubeIndicies = new short[]
+        {
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15,
+            16, 17, 18, 16, 18, 19,
+            20, 21, 22, 20, 22, 23
+        };
         private static short[] SphereIndicies;
         private static VertexPositionColorNormalTexture[] MakeUnitSphere(int circleNum, int radialNum)
         {
@@ -584,6 +811,7 @@ namespace ThreeD.PrimtiveBatch
 
             // making the indecies!
             var calcVertNum = new Func<int, int, int>((i, j) => i*radialNum + j);
+
             for (var i = 0; i < circleNum -1; i++)
             {
                 for (var j = 0; j < radialNum; j++)
@@ -625,8 +853,9 @@ namespace ThreeD.PrimtiveBatch
                 indicies.Add((short)((j + 1) % radialNum));
 
                 indicies.Add((short)topIndex);
-                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
+
                 indicies.Add((short)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
+                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
 
             }
 

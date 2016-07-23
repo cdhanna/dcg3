@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using ThreeD;
-using ThreeD.PrimtiveBatch;
-using ThreeD.Util;
+using DCG.Framework;
+using DCG.Framework.PrimtiveBatch;
+using DCG.Framework.Util;
 
 namespace DCG3.GameLogic
 {

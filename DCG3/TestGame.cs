@@ -6,10 +6,10 @@ using DCG3.GameLogic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using ThreeD;
-using ThreeD.Menu;
-using ThreeD.PrimtiveBatch;
-using ThreeD.Util;
+using DCG.Framework;
+using DCG.Framework.Menu;
+using DCG.Framework.PrimtiveBatch;
+using DCG.Framework.Util;
 
 namespace DCG3
 {
@@ -25,7 +25,7 @@ namespace DCG3
         
         private SimpleCamera _cam;
 
-        private Texture2D _texAgu, _texNuke, _texC, _texAguStrip, _texBorderGlow, _cellTex;
+        private Texture2D _texAgu, _texNuke, _texC, _texAguStrip, _texBorderGlow, _cellTex, _stripeTex, _texFloor;
         private Rand _rand;
         private FPSHelper _fps;
 
@@ -49,11 +49,16 @@ namespace DCG3
             _texC = Content.Load<Texture2D>("C");
             _texBorderGlow = Content.Load<Texture2D>("glowborder");
             _cellTex = Content.Load<Texture2D>("cell");
-
+            _stripeTex = Content.Load<Texture2D>("stripes");
+            _texFloor = Content.Load<Texture2D>("floor2");
 
             _pBatch.ClearGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/ClearGBuffer.build.fx");
             _pBatch.RenderGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/RenderGBuffer.build.fx");
             _pBatch.PassThroughEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/PassThrough.build.fx");
+            _pBatch.DirectionalLightEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/DirectionalLight.build.fx");
+            _pBatch.CombineFinalEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/CombineFinal.build.fx");
+            _pBatch.PointLightEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/PointLight.build.fx");
+
 
             _cam.Target = Vector3.Zero;
             _rand = new Rand();
@@ -77,11 +82,14 @@ namespace DCG3
             _cam.Target = _level.PlayerStart;
             //_cam.Up = new Vector3(0, 0, 1);
 
+
+            _cam.Target = Vector3.Zero;
             base.Initialize();
         }
 
 
-        private float camAngle, camAngle2, objsAngle;
+        private float camAngle, camAngle2=.1f, objsAngle, lightAngle;
+        
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -90,9 +98,9 @@ namespace DCG3
             _fps.OnUpdate(gameTime);
 
             _plr.Update(gameTime);
-            _cam.Update();
+           // _cam.Update();
 
-            _cam.Target = _plr.Position;
+            //_cam.Target = _plr.Position;
 
             if (KeyboardHelper.IsKeyDown(Keys.A))
             {
@@ -124,6 +132,24 @@ namespace DCG3
                 objsAngle += .01f;
             }
 
+            if (KeyboardHelper.IsKeyDown(Keys.Left))
+            {
+                var toTarget = new Vector2((float) Math.Cos(camAngle), (float) Math.Sin(camAngle));
+                var perp = new Vector2(toTarget.Y, -toTarget.X) ;
+                perp.Normalize();
+                ;
+                _cam.Target -= (new Vector3(perp.X, 0, perp.Y) * .1f);
+            }
+            if (KeyboardHelper.IsKeyDown(Keys.Right))
+            {
+                var toTarget = new Vector2((float)Math.Cos(camAngle), (float)Math.Sin(camAngle));
+                var perp = new Vector2(toTarget.Y, -toTarget.X) ;
+                perp.Normalize();
+                ;
+                _cam.Target += (new Vector3(perp.X, 0, perp.Y) * .1f);
+
+            }
+            lightAngle += .01f;
 
             KeyboardHelper.Update();
             base.Update(gameTime);
@@ -133,34 +159,41 @@ namespace DCG3
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.DarkBlue);
             _fps.OnDraw();
             
             _pBatch.Begin();
 
            // _cam.Position = new Vector3(0, 0, -5);
             //_cam.Target = Vector3.Zero;
-            var view = _cam.GetView();
-
-
+           
 
             //_level.Draw(_pBatch);
             //_plr.Draw(_pBatch);
             //_cam.Position = Vector3.Transform(new Vector3(5, 0, 0), Matrix.CreateFromYawPitchRoll(camAngle, 0, camAngle2));
             var r = 5;
-            _cam.Position = new Vector3(r * (float)Math.Cos(camAngle), 1, r * (float)Math.Sin(camAngle));
-            _cam.Target = Vector3.Zero;
+            var rm = (float) Math.Sin(camAngle2);
+            var x = (float) Math.Cos(camAngle);
+            var z = (float) Math.Sin(camAngle);
+
+            var y = (float) Math.Cos(camAngle2);
+
+            _cam.Position = new Vector3(rm * r*x, r * y, rm * r*z) + _cam.Target;
+
+            var view = _cam.GetView();
+
+
+            //_cam.Up = new Vector3(0, 0, 0);
+            //_cam.Target = Vector3.Zero;
            // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
 
-            _pBatch.Sphere(Vector3.Zero + Vector3.UnitX * objsAngle, Vector3.One, .6f);
+            _pBatch.Cube(new Vector3(0, -1, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One*5,
+                SamplerState.LinearWrap);
 
-            _pBatch.AtlasShown = true;
-            _pBatch.Cube(new Vector3(0, 1, 3), Vector3.One, Quaternion.Identity, _texAgu );
+            _pBatch.LightPoint(new Vector3(0, 2, 0), Color.DimGray, 5, 1f );
+            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.Red, 2f, 1f );
 
-            
-            //_pBatch.AtlasShown = true;
-            _pBatch.Flush(view, _cam.ProjectionMatrix);
+            _pBatch.Flush(Color.DarkSlateGray, _cam.Position, view, _cam.ProjectionMatrix);
 
             base.Draw(gameTime);
         }

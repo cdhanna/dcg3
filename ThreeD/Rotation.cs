@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 
-namespace ThreeD
+namespace DCG.Framework
 {
     public struct Rotation
     {

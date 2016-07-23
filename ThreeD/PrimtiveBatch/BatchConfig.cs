@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ThreeD.PrimtiveBatch
+namespace DCG.Framework.PrimtiveBatch
 {
     /// <summary>
     /// A BatchConfig is a struct of GraphicsDevice options. 

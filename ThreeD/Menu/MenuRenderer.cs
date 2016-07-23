@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace ThreeD.Menu
+namespace DCG.Framework.Menu
 {
     public interface IMenuRenderer
     {

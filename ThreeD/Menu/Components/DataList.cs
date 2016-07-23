@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ThreeD.Menu.Components
+namespace DCG.Framework.Menu.Components
 {
     public class MenuDataList : MenuContainer
     {
