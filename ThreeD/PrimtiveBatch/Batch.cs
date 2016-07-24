@@ -36,8 +36,8 @@ namespace DCG.Framework.PrimtiveBatch
             
             Config = config;
 
-            VertexArrayCapacity = 2048;
-            IndexArrayCapacity = 2048;
+            VertexArrayCapacity = 4000;
+            IndexArrayCapacity = 4000;
             _vertexArrayRunningIndex = 0;
             _indexArrayRunningIndex = 0;
             VertexArray = new VertexPositionColorNormalTexture[VertexArrayCapacity];
@@ -68,7 +68,7 @@ namespace DCG.Framework.PrimtiveBatch
         public void AddSomeIndicies(short[] indicies, short offset)
         {
             // check and make sure that our size is big enough to hold the new indicies.
-            if (_indexArrayRunningIndex + indicies.Length >= IndexArrayCapacity)
+            while (_indexArrayRunningIndex + indicies.Length >= IndexArrayCapacity)
             {
                 IndexArrayCapacity *= 2;
                 var next = new short[IndexArrayCapacity];
@@ -76,7 +76,6 @@ namespace DCG.Framework.PrimtiveBatch
                 IndexArray = next;
             }
 
-            //IndexArray = indicies; // TODO wont work. 
             //_indexArrayRunningIndex = indicies.Length;
             // time to go in and add the 36 points for each cube.
             for (int i = 0; i < indicies.Length; i++)
@@ -88,26 +87,26 @@ namespace DCG.Framework.PrimtiveBatch
 
         }
 
-        public void AddCubeIndicies()
-        {
+        //public void AddCubeIndicies()
+        //{
 
-            // check and make sure that our size is big enough to hold the new indicies.
-            if (_indexArrayRunningIndex + CubeIndicies.Length >= IndexArrayCapacity)
-            {
-                IndexArrayCapacity *= 2;
-                var next = new short[IndexArrayCapacity];
-                Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
-                IndexArray = next;
-            }
+        //    // check and make sure that our size is big enough to hold the new indicies.
+        //    if (_indexArrayRunningIndex + CubeIndicies.Length >= IndexArrayCapacity)
+        //    {
+        //        IndexArrayCapacity *= 2;
+        //        var next = new short[IndexArrayCapacity];
+        //        Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
+        //        IndexArray = next;
+        //    }
             
-            // time to go in and add the 36 points for each cube.
-            for (int i = 0; i < CubeIndicies.Length; i++)
-            {
-                IndexArray[i + _indexArrayRunningIndex] = (short) (CubeIndicies[i] + (short)_count);
-            }
-            _count += 24;
-            _indexArrayRunningIndex += CubeIndicies.Length;
-        }
+        //    // time to go in and add the 36 points for each cube.
+        //    for (int i = 0; i < CubeIndicies.Length; i++)
+        //    {
+        //        IndexArray[i + _indexArrayRunningIndex] = (short) (CubeIndicies[i] + (short)_count);
+        //    }
+        //    _count += 24;
+        //    _indexArrayRunningIndex += CubeIndicies.Length;
+        //}
 
         public int GetIndexArrayLength()
         {

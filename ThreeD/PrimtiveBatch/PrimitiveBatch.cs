@@ -171,6 +171,10 @@ namespace DCG.Framework.PrimtiveBatch
             RenderGBufferEffect.Parameters["WorldViewProj"].SetValue(
                 _worldMatrix * viewMatrix * projectionMatrix);
 
+
+            RenderGBufferEffect.Parameters["specularPower"].SetValue(.5f);
+            RenderGBufferEffect.Parameters["specularIntensity"].SetValue(1f);
+
             // time to iterate over all the batches. 
             // each batch will effect graphics device configurations. 
             _batchColl.GetAll().ForEach(batch =>
@@ -180,6 +184,8 @@ namespace DCG.Framework.PrimtiveBatch
                 _device.SamplerStates[0] = batch.Config.SamplerState;
 
                 RenderGBufferEffect.Parameters["Texture"].SetValue(batch.Config.Texture);
+
+                RenderGBufferEffect.Parameters.TrySet("NormalMap", batch.Config.NormalMap);
 
                 // get vertex data and index data, and set the graphics device to use them
                 var vBuffer = GetVBOForBatch(batch);
@@ -327,6 +333,11 @@ namespace DCG.Framework.PrimtiveBatch
             Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.Zero, samplerState, textureStyle);
         }
 
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture,
+            Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
+        {
+            Cube(position, size, rotation, color, texture, null, textureScale, textureOffset, samplerState, textureStyle);
+        }
         /// <summary>
         /// Adds a cube to be drawn when flush() happens
         /// </summary>
@@ -338,7 +349,7 @@ namespace DCG.Framework.PrimtiveBatch
         /// <param name="textureScale">a texture coordinate scaling vector, used to tile textures</param>
         /// <param name="samplerState">the sampler state that the graphics device will be when this cube is actually drawn</param>
         /// <param name="textureStyle">the texture style for applying the texture to the cube</param>
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture,
+        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Texture2D normalMap,
             Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
         {
 
@@ -350,6 +361,11 @@ namespace DCG.Framework.PrimtiveBatch
             if (texture == null) // we need a texture, so if the user didn't provide one, then give the standard white pixel
             {
                 texture = _pixel;
+            }
+
+            if (normalMap == null)
+            {
+                normalMap = _pixel;
             }
 
             if (samplerState == null) // normally we use the texture atlas, and the samplerState is clamped
@@ -367,12 +383,12 @@ namespace DCG.Framework.PrimtiveBatch
                 || samplerState.Equals(SamplerState.PointClamp)
                 || samplerState.Equals(SamplerState.AnisotropicClamp)) // any of the xClamp sampler states trigger the usage of the texture atlas
             {
-                batch = GetBatch(_atlas.Texture, SamplerState.LinearClamp);
+                batch = GetBatch(_atlas.Texture, normalMap, SamplerState.LinearClamp);
                 inAtlas = true;
             }
             else // any other sampler state has its own batch.
             {
-                batch = GetBatch(texture, SamplerState.LinearWrap);
+                batch = GetBatch(texture,normalMap, SamplerState.LinearWrap);
             }
             var oldVertexCount = batch.GetVertexArrayLength();
 
@@ -399,12 +415,12 @@ namespace DCG.Framework.PrimtiveBatch
                 texture = _pixel;
             }
 
-            var batch = GetBatch(texture, SamplerState.LinearWrap);
+            var batch = GetBatch(texture, _pixel,SamplerState.LinearWrap);
 
             var oldVertexCount = batch.GetVertexArrayLength();
 
             var textureOffset = Vector2.Zero;
-            var textureScale = Vector2.One;
+            var textureScale = new Vector2(1, -1);
             var inAtlas = false;
 
             var applyTexOffset = new Func<Vector2, Vector2>(v => (v + textureOffset));
@@ -423,25 +439,17 @@ namespace DCG.Framework.PrimtiveBatch
                 transformUV = (v => (applyTexOffset(v) * textureScale) * ratio + texIndex.Position / atlasSize); // this is the 'atlas' version
             }
 
-            var inversePi = 1/MathHelper.Pi;
+            var transformMatrix = Matrix.CreateFromQuaternion(rotation);
             for (var i = 0; i < SphereVerts.Length; i++)
             {
                 var vert = SphereVerts[i];
 
-                var v = (vert.Position.Y + 1) * .5f;
-                var u = (float) (Math.Atan2(vert.Position.Z, vert.Position.X)*inversePi );
-                u = u >= 0 ? u/2f : (u/2f + 1);
-
-                //if (vert.Position.Z == 0 && vert.Position.X == 0)
-                //{
-                //    //u = .5f;
-                //}
 
                 batch.AddVertex(new VertexPositionColorNormalTexture(
-                    position + vert.Position * size,
+                    Vector3.Transform(position + vert.Position * size, transformMatrix),
                     color,
-                    transformUV(new Vector2(u, v)),
-                    vert.Normal));
+                    transformUV(vert.TextureCoordinate),
+                    Vector3.Transform(vert.Normal, transformMatrix)));
 
             }
             batch.AddSomeIndicies(SphereIndicies, (short) oldVertexCount);
@@ -452,10 +460,11 @@ namespace DCG.Framework.PrimtiveBatch
 
         #region Helper Methods
 
-        private Batch GetBatch(Texture2D texture, SamplerState state)
+        private Batch GetBatch(Texture2D texture, Texture2D normalMap, SamplerState state)
         {
-            var conf = new BatchConfig(texture, PrimitiveType.TriangleList, state, BlendState.NonPremultiplied);
-            return _batchColl.Get(conf);
+            var conf = new BatchConfig(texture, normalMap, PrimitiveType.TriangleList, state, BlendState.NonPremultiplied);
+            var b = _batchColl.Get(conf);
+            return b;
         }
 
         // get the VBO for this batch, and ensure that it is the right size.
@@ -729,7 +738,7 @@ namespace DCG.Framework.PrimtiveBatch
         static PrimitiveBatch()
         {
             // work in here to create sphere points. 
-            SphereVerts = MakeUnitSphere(12, 15);
+            SphereVerts = MakeUnitSphere(20, 20);
 
 
         }
@@ -750,91 +759,102 @@ namespace DCG.Framework.PrimtiveBatch
 
             var verts = new List<VertexPositionColorNormalTexture>();
 
-            var indicies = new List<short>();
             // circleNum * radiulNum * 6 + 6 * radialNum 
             // 6 * radialNum (circleNum + 1)
 
 
             for (var i = 0f; i < circleNum; i++)
             {
-                var totalCircleNum = circleNum + 1;
-                var v = (i + 1)/totalCircleNum;
+                var v = (i + 1)/(circleNum + 1);
 
-                for (var j = 0; j < radialNum; j++)
+                for (var j = 0; j <= radialNum; j++)
                 {
                     var theta = j*MathHelper.TwoPi/radialNum; // todo optimize speed
 
-                    var y = (v - .5f) * 2;
-                    //var modifiedRadius = .5f * radius * Math.Sin(v * Math.PI);
-                    var stupid = ( v*2 -1);
-                    var stupidArg = 1 - Math.Pow(stupid, 2);
-
-                    var modifiedRadius = Math.Sqrt(stupidArg);
-
+                    // new style
+                    var y = (float)Math.Sin(MathHelper.Pi * v - MathHelper.PiOver2);
+                    var modifiedRadius = Math.Sqrt(1 - y * y);
                     
-                    // input is [0,1]
-                    // output [1, 0, 1]     0 -> 1,     .5 -> 0,    1 -> 1
-
-
                     var x = (float) ( modifiedRadius*Math.Cos(theta) );
                     var z = (float) ( modifiedRadius*Math.Sin(theta) );
                    
                     var normal = new Vector3(x, y, z);
 
-                    if (Math.Abs(normal.Length() - 1f) > 0.001f || float.IsNaN(x) || float.IsNaN(y) || float.IsNaN(z))
-                    {
-                        Console.WriteLine("NOOOOO");
-                    }
+                    //if (Math.Abs(normal.Length() - 1f) > 0.001f || float.IsNaN(x) || float.IsNaN(y) || float.IsNaN(z))
+                    //{
+                    //    Console.WriteLine("NOOOOO");
+                    //}
 
                     normal.Normalize(); // todo maybe we don't need this depending on WHEN the radius multiplication happens
 
+                    var uv_v = v;//(y + 1) * .5f;
+                    var uv_u = j / (float)radialNum;
+                    //Console.WriteLine("UV COORD "  + uv_v);
                     verts.Add(new VertexPositionColorNormalTexture(
-                        new Vector3(x, y, z), Color.LimeGreen, Vector2.Zero, normal));
+                        new Vector3(x, y, z), Color.White, new Vector2(1 - uv_u, uv_v), normal));
 
 
                   
                 }
             }
 
-            // TODO later, generate top and bott
             var top = new Vector3(0, 1, 0);
             var bot = new Vector3(0, -1, 0);
 
-            verts.Add(new VertexPositionColorNormalTexture(
-                top, Color.LimeGreen, Vector2.Zero, Vector3.UnitY));
-            var topIndex = verts.Count - 1;
+            // THE TOP SET OF POINTS
+            var topIndexStart = verts.Count;
+            for (var i = 0; i <= radialNum; i++)
+            {
+                var v = 1;
+                var u = i / (float)radialNum;
+                verts.Add(new VertexPositionColorNormalTexture(
+                    top, Color.White, new Vector2(1 - u, v), Vector3.UnitY));
+            }
 
-            verts.Add(new VertexPositionColorNormalTexture(
-                bot, Color.LimeGreen, Vector2.Zero, -Vector3.UnitY));
-            var botIndex = verts.Count - 1;
+            //// THE BOT SET OF POINTS
+            var botIndexStart = verts.Count;
+            for (var i = 0; i <= radialNum; i++)
+            {
+                var v = 0;
+                var u = i / (float)radialNum;
+                verts.Add(new VertexPositionColorNormalTexture(
+                    bot, Color.White, new Vector2(1- u, v), -Vector3.UnitY));
+            }
+
+            //verts.Add(new VertexPositionColorNormalTexture(
+            //    top, Color.LimeGreen, new Vector2(.5f, 1), Vector3.UnitY));
+            //var topIndex = verts.Count - 1;
+
+            //verts.Add(new VertexPositionColorNormalTexture(
+            //    bot, Color.LimeGreen, new Vector2(.5f, 0), -Vector3.UnitY));
+            //var botIndex = verts.Count - 1;
 
 
             // making the indecies!
-            var calcVertNum = new Func<int, int, int>((i, j) => i*radialNum + j);
 
-            for (var i = 0; i < circleNum -1; i++)
+            var indicies = new List<short>();
+            for (var i = 0; i < circleNum - 1; i++)
             {
                 for (var j = 0; j < radialNum; j++)
                 {
-                    var topLeft = (short)(i * radialNum + j);
+                   
+                    
+
+                    var topLeft = (short)(i * (radialNum + 1) + j);
                     var topRight = (short) ((topLeft + 1) );
-                    if (topRight >= (i + 1)*radialNum)
-                    {
-                        topRight -= (short) radialNum;
-                    }
+                    //if (topRight >= (i + 1) * radialNum)
+                    //{
+                    //    topRight -= (short)radialNum;
+                    //}
 
 
-                    var botLeft = (short) (topLeft + radialNum);
+                    var botLeft = (short) (topLeft + radialNum + 1);
                     var botRight = (short) ( (botLeft + 1)  );
-                    if (botRight >= (i+2) *radialNum)
-                    {
-                        botRight -= (short)radialNum;
-                    }
+                    //if (botRight >= (i + 2) * radialNum)
+                    //{
+                    //    botRight -= (short)radialNum;
+                    //}
 
-                    if (topLeft == 5 || topRight == 5 || botLeft == 5 || botRight == 5)
-                    {
-                        
-                    }
 
                     indicies.Add(  topLeft);
                     indicies.Add(  botLeft);
@@ -848,14 +868,20 @@ namespace DCG.Framework.PrimtiveBatch
 
             for (short j = 0; j < radialNum; j++)
             {
-                indicies.Add((short)botIndex);
+
+                indicies.Add((short)(botIndexStart + j));
                 indicies.Add(j);
-                indicies.Add((short)((j + 1) % radialNum));
+                indicies.Add((short)((j + 1)));
 
-                indicies.Add((short)topIndex);
 
-                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
-                indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
+                indicies.Add((short)(topIndexStart + j));
+                indicies.Add((short)((circleNum - 1) * (radialNum + 1) + j + 1));
+                indicies.Add((short)((circleNum - 1) * (radialNum + 1) + j));
+
+
+
+                //indicies.Add((short)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
+                //indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
 
             }
 
@@ -877,15 +903,14 @@ namespace DCG.Framework.PrimtiveBatch
                 
                 new VertexPositionColorNormalTexture(new Vector3(0, 1, 0), Color.White, new Vector2(0, 0),
                     new Vector3(0, 0, -1)), // 4
-                
-                
+       
                 new VertexPositionColorNormalTexture(new Vector3(1, 1, 0), Color.White, new Vector2(0, 0),
                     new Vector3(0, 0, -1)), // 3
 
-                    new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0),
+                new VertexPositionColorNormalTexture(new Vector3(1, 0, 0), Color.White, new Vector2(0, 0),
                     new Vector3(0, 0, -1)), // 2
 
-                    new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0),
+                new VertexPositionColorNormalTexture(new Vector3(0, 0, 0), Color.White, new Vector2(0, 0),
                     new Vector3(0, 0, -1)), // 1 
             }.ToList().Translate(new Vector3(-.5f, -.5f, 0));
 

@@ -13,15 +13,16 @@ namespace DCG.Framework.PrimtiveBatch
     /// </summary>
     internal struct BatchConfig
     {
-        public Texture2D Texture;
+        public Texture2D Texture, NormalMap;
         public PrimitiveType PrimtiveType;
         public SamplerState SamplerState;
         public BlendState BlendState;
 
 
-        public BatchConfig(Texture2D texture, PrimitiveType primType, SamplerState sampler, BlendState blend)
+        public BatchConfig(Texture2D texture, Texture2D normalMap, PrimitiveType primType, SamplerState sampler, BlendState blend)
         {
             Texture = texture;
+            NormalMap = normalMap;
             PrimtiveType = primType;
             BlendState = blend;
             SamplerState = sampler;
@@ -34,6 +35,7 @@ namespace DCG.Framework.PrimtiveBatch
                 var other = (BatchConfig)obj;
 
                 return other.PrimtiveType.Equals(PrimtiveType)
+                        && other.NormalMap.Equals(NormalMap)
                        && other.BlendState.Equals(BlendState)
                        && other.Texture.Equals(Texture)
                        && other.SamplerState.Equals(SamplerState);
@@ -46,7 +48,8 @@ namespace DCG.Framework.PrimtiveBatch
         {
             return Texture.GetHashCode() * 3
                    + PrimtiveType.GetHashCode() * 7
-                   + SamplerState.GetHashCode() * 11;
+                   + SamplerState.GetHashCode() * 11
+                   + NormalMap.GetHashCode() * 13;
         }
 
 
