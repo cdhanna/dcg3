@@ -21,6 +21,8 @@ namespace DCG.Framework.PrimtiveBatch
         void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
         void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
+        
+        void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Texture2D normalMap, Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad);
 
 
         void Sphere(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture);

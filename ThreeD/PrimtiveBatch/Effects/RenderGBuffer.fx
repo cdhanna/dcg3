@@ -9,10 +9,21 @@ float specularIntensity = 0.8f;
 float specularPower = 0.5f;
 
 texture Texture;
+texture NormalMap;
 
 sampler diffuseSampler = sampler_state
 {
 	Texture = (Texture);
+	MAGFILTER = LINEAR;
+	MINFILTER = LINEAR;
+	MIPFILTER = LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
+
+sampler normalSampler = sampler_state
+{
+	Texture = (NormalMap);
 	MAGFILTER = LINEAR;
 	MINFILTER = LINEAR;
 	MIPFILTER = LINEAR;
@@ -65,7 +76,12 @@ PixelShaderOutput PixelShaderFunction(VertexShaderOutput input)
 	output.Color = tex2D(diffuseSampler, input.TexCoord) * input.Color;            //output Color
 	output.Color.a = specularIntensity;                                              //output SpecularIntensity
 	
+	float4 normalMap = tex2D(normalSampler, input.TexCoord);
+
 	output.Normal.rgb = 0.5f * (normalize(-input.Normal) + 1.0f);    //transform normal domain
+	
+	//output.Normal.rgb = normalize(output.Normal.rgb + normalMap.rgb);
+
 	output.Normal.a = specularPower;                                            //output SpecularPower
 
 	output.Depth = input.Depth.x / input.Depth.y;                           //output Depth

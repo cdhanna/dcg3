@@ -25,7 +25,9 @@ namespace DCG3
         
         private SimpleCamera _cam;
 
-        private Texture2D _texAgu, _texNuke, _texC, _texAguStrip, _texBorderGlow, _cellTex, _stripeTex, _texFloor;
+        private Texture2D _texGlobe, _texAgu, _texNuke, _texC, _texAguStrip, _texBorderGlow, _cellTex, _stripeTex, _texFloor;
+        private Texture2D _pillowColor, _pillowNormal;
+        
         private Rand _rand;
         private FPSHelper _fps;
 
@@ -51,6 +53,12 @@ namespace DCG3
             _cellTex = Content.Load<Texture2D>("cell");
             _stripeTex = Content.Load<Texture2D>("stripes");
             _texFloor = Content.Load<Texture2D>("floor2");
+            _texGlobe = Content.Load<Texture2D>("globe3");
+
+            _pillowNormal = Content.Load<Texture2D>("pillow_normal");
+            _pillowColor = Content.Load<Texture2D>("pillow_color");
+            
+
 
             _pBatch.ClearGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/ClearGBuffer.build.fx");
             _pBatch.RenderGBufferEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/RenderGBuffer.build.fx");
@@ -88,7 +96,7 @@ namespace DCG3
         }
 
 
-        private float camAngle, camAngle2=.1f, objsAngle, lightAngle;
+        private float camAngle, camAngle2=.1f, objsAngle, lightAngle, objX;
         
         protected override void Update(GameTime gameTime)
         {
@@ -131,6 +139,15 @@ namespace DCG3
             {
                 objsAngle += .01f;
             }
+            if (KeyboardHelper.IsKeyDown(Keys.O))
+            {
+                objX -= .01f;
+            }
+
+            if (KeyboardHelper.IsKeyDown(Keys.P))
+            {
+                objX += .01f;
+            }
 
             if (KeyboardHelper.IsKeyDown(Keys.Left))
             {
@@ -170,7 +187,7 @@ namespace DCG3
             //_level.Draw(_pBatch);
             //_plr.Draw(_pBatch);
             //_cam.Position = Vector3.Transform(new Vector3(5, 0, 0), Matrix.CreateFromYawPitchRoll(camAngle, 0, camAngle2));
-            var r = 5;
+            var r = 3 + objsAngle;
             var rm = (float) Math.Sin(camAngle2);
             var x = (float) Math.Cos(camAngle);
             var z = (float) Math.Sin(camAngle);
@@ -187,13 +204,17 @@ namespace DCG3
            // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
 
-            _pBatch.Cube(new Vector3(0, -1, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One*5,
+            _pBatch.Cube(new Vector3(0, -1.4f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
                 SamplerState.LinearWrap);
 
-            _pBatch.LightPoint(new Vector3(0, 2, 0), Color.DimGray, 5, 1f );
-            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.Red, 2f, 1f );
+            //_pBatch.Sphere(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f), Color.White, _texGlobe );
 
-            _pBatch.Flush(Color.DarkSlateGray, _cam.Position, view, _cam.ProjectionMatrix);
+            _pBatch.Cube(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.Identity, Color.White, _pillowColor,_pillowNormal,Vector2.One,Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
+
+            //_pBatch.LightPoint(new Vector3(0, 2, 0), Color.DimGray, 5, 1f );
+            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.Red, 8f, 1f );
+
+            _pBatch.Flush(new Color(.1f, .1f, .1f, 1), _cam.Position, view, _cam.ProjectionMatrix);
 
             base.Draw(gameTime);
         }
