@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using DCG.Framework.Physics.Bodies;
 using DCG.Framework.Util;
 using Microsoft.Xna.Framework;
 
@@ -12,6 +14,13 @@ namespace DCG.Framework.Physics.Colliders
 {
     public abstract class AbsCollider
     {
+        public PhysicsBody Body;
+
+        protected AbsCollider(PhysicsBody body)
+        {
+            Body = body;
+        }
+
         public CollisionResult CheckCollision(AbsCollider other)
         {
             return ColliderChecks.Check(this, other);
@@ -23,67 +32,63 @@ namespace DCG.Framework.Physics.Colliders
     {
         public Vector3 Position { get; set; }
         public float Radius { get; set; }
+        public SphereCollider(PhysicsBody body) : base(body) { }
     }
 
     public class BoxCollider : AbsCollider
     {
         public Vector3 Position { get; set; }
         public Vector3 Size { get; set; }
+        public Quaternion Rotation { get; set; }
+
+        public BoxCollider(PhysicsBody body) : base(body) { }
+
     }
 
     public class PlaneCollider : AbsCollider
     {
-        public Vector3 Position { get; set; }
+        public float Offset { get; set; }
         public Vector3 Normal { get; set; }
+        public PlaneCollider(PhysicsBody body) : base(body) { }
+
     }
 
     public class ColliderChecks
     {
-        static ColliderChecks() // on the static constructor, create all the possible type combos, and what methods they go to.
-        {
-            _registeredColliderTypes = new List<Type>();
-            AddColliderType<SphereCollider>();
-            AddColliderType<PlaneCollider>();
-
-            AddMethod<SphereOnBox(SphereOnSphere);
-        }
-
-
-        #region book keeping
-        private static List<Type> _registeredColliderTypes;
-        private delegate bool ColliderMethod<A, B>(A a, B b, CollisionResult result) where A : AbsCollider where B : AbsCollider;
-
-        private static void AddColliderType<T>() where T : AbsCollider
-        {
-            _registeredColliderTypes.Add(typeof(T));
-        }
-
-        private static void AddMethod<A, B>(ColliderMethod<A, B> mthd) where A : AbsCollider where B : AbsCollider
-        {
-            
-        }
-
-    
-        private static string GetName(Type a, Type b)
-        {
-            return a.Name + "__" + b.Name;
-        }
-
-        #endregion
-
-
+ 
         public static CollisionResult Check(AbsCollider a, AbsCollider b)
         {
             var aType = a.GetType();
             var bType = b.GetType();
 
-            var collisionData = new CollisionResult();
+            var res = new CollisionResult();
 
-            if (aType == typeof (SphereCollider) && bType == typeof (SphereCollider))
-            {
-                SphereOnSphere(a as SphereCollider, b as SphereCollider, collisionData);
-                return collisionData;
-            }
+            var sphere = typeof (SphereCollider);
+            var box = typeof (BoxCollider);
+            var plane = typeof (PlaneCollider);
+
+            var toSphere = new Func<AbsCollider, SphereCollider>(c => c as SphereCollider);
+            var toBox = new Func<AbsCollider, BoxCollider>(c => c as BoxCollider);
+            var toPlane = new Func<AbsCollider, PlaneCollider>(c => c as PlaneCollider);
+
+            if (aType == sphere && bType == plane)
+                SphereOnPlane(toSphere(a), toPlane(b), res);
+
+            if (aType == plane && bType == sphere)
+                SphereOnPlane(toSphere(b), toPlane(a), res);
+
+            if (aType == box && bType == plane)
+                BoxOnPlane(toBox(a), toPlane(b), res);
+
+            if (aType == plane && bType == box)
+                BoxOnPlane(toBox(b), toPlane(a), res);
+
+            return res;
+            //if (aType == typeof (SphereCollider) && bType == typeof (SphereCollider))
+            //{
+            //    SphereOnSphere(a as SphereCollider, b as SphereCollider, collisionData);
+            //    return collisionData;
+            //}
 
             throw new NotImplementedException();
 
@@ -101,6 +106,66 @@ namespace DCG.Framework.Physics.Colliders
             //}
         }
 
+        public static bool SphereOnPlane(SphereCollider a, PlaneCollider b, CollisionResult result)
+        {
+            var dist = b.Normal.Dot(a.Position) - a.Radius - b.Offset;
+            if (dist >= 0) return false; // early out, no collision
+
+            // TODO: remember, the plane is thought of as an infinately huge wall behind the normal.
+            // TODO: to make it a thin page, we need to adjust the normal. Check the book, yooooooo.
+            var c = new Contact(
+                a.Position - b.Normal * (dist + a.Radius),
+                b.Normal,
+                -dist);
+
+            c.bodyA = a.Body;
+            c.bodyB = b.Body;
+
+            result.AddContact(c);
+            return true;
+        }
+
+        public static bool BoxOnPlane(BoxCollider a, PlaneCollider b, CollisionResult result)
+        {
+            // TODO add a pre check for early out options. 
+
+            // TODO add rotation helper in. 
+            // need to check all points. 
+            var points = new Vector3[]
+            {
+                 new Vector3(1, 1, 1),
+                 new Vector3(-1, 1, 1),
+                 new Vector3(1, -1, 1),
+                 new Vector3(-1, -1, 1),
+                 new Vector3(1, 1, -1),
+                 new Vector3(-1, 1, -1),
+                 new Vector3(1, -1, -1),
+                 new Vector3(-1, -1, -1),
+            };
+
+            var transformMatrix = Matrix.CreateFromQuaternion(a.Rotation);
+            //transformMatrix = Matrix.CreateFromQuaternion(Quaternion.Identity);
+            for (var i = 0; i < points.Length; i++)
+            {
+                var vert = Vector3.Transform(points[i] * a.Size/2, transformMatrix) + a.Position;
+                var dist = b.Normal.Dot(vert);
+
+                if (dist <= b.Offset)
+                {
+                    var c = new Contact(
+                        vert + b.Normal*(dist - b.Offset)/2,
+                        b.Normal,
+                        b.Offset - dist);
+                    c.bodyA = a.Body;
+                    c.bodyB = b.Body;
+
+                    result.AddContact(c);
+                }
+            }
+
+            return result.AnyContact;
+        }
+
         public static bool SphereOnSphere(SphereCollider a, SphereCollider b, CollisionResult result)
         {
             
@@ -113,11 +178,13 @@ namespace DCG.Framework.Physics.Colliders
             }
 
             // the sphere is colliding. We need to add a contact, and return true.
-            result.AddContact(new Contact(
+            var c= new Contact(
                 a.Position + diff/2,
                 diff.Normal(),
-                (a.Radius + b.Radius) - dist));
-
+                (a.Radius + b.Radius) - dist);
+            c.bodyA = a.Body;
+            c.bodyB = b.Body;
+            result.AddContact(c);
             return true;
 
         }

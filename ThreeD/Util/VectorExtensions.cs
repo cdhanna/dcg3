@@ -13,5 +13,10 @@ namespace DCG.Framework.Util
         {
             return self/self.Length();
         }
+
+        public static float Dot(this Vector3 self, Vector3 other)
+        {
+            return Vector3.Dot(self, other);
+        }
     }
 }

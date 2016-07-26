@@ -47,9 +47,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomVertexDecleration.cs" />
+    <Compile Include="Physics\Bodies\BoxBody.cs" />
+    <Compile Include="Physics\Bodies\PhysicsBody.cs" />
+    <Compile Include="Physics\Bodies\PlaneBody.cs" />
+    <Compile Include="Physics\Bodies\SphereBody.cs" />
     <Compile Include="Physics\Colliders\CollisionData.cs" />
     <Compile Include="Physics\Colliders\ICollider.cs" />
     <Compile Include="Physics\Contact.cs" />
+    <Compile Include="Physics\ContactFinder.cs" />
+    <Compile Include="Physics\PhysicsSimulation.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
     <Compile Include="PrimtiveBatch\BatchConfig.cs" />
     <Compile Include="Util\VectorExtensions.cs" />

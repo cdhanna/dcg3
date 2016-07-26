@@ -44,11 +44,13 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Box.cs" />
     <Compile Include="GameLogic\Cube.cs" />
     <Compile Include="GameLogic\JsonLoader.cs" />
     <Compile Include="GameLogic\Level.cs" />
     <Compile Include="GameLogic\Player.cs" />
     <Compile Include="GameLogic\SimpleCamera.cs" />
+    <Compile Include="Sphere.cs" />
     <Compile Include="TestGame.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

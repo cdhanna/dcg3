@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using DCG.Framework.Physics;
+using DCG.Framework.Physics.Bodies;
+using DCG.Framework.Physics.Colliders;
 using DCG3.GameLogic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -33,6 +36,11 @@ namespace DCG3
 
         private Level _level;
         private Player _plr;
+
+        private Sphere _sphere;
+        private Box _box;
+        private PlaneBody _planeBody;
+        private PhysicsSimulation _sim;
 
         public TestGame()
         {
@@ -67,36 +75,38 @@ namespace DCG3
             _pBatch.CombineFinalEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/CombineFinal.build.fx");
             _pBatch.PointLightEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/PointLight.build.fx");
 
+            _sim = new PhysicsSimulation();;
+            _sim.Gravity = new Vector3(0, 0, 0);
 
-            _cam.Target = Vector3.Zero;
+            _sphere = new Sphere();
+            _sphere.Position = new Vector3(0, 3, 0);
+
+            _box = new Box();
+            _box.Position = new Vector3(-2, 3, -1);
+            _box.Body.Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, .6f);
+            _box.Body.SigmaForce += new Vector3(0, -.01f, 0);
+            _box.Body.Size = new Vector3(3, 1, 1);
+
+            _planeBody = new PlaneBody(Vector3.UnitY, -.5f);
+
+            //_sim.Bodies.Add(_sphere.Body);
+            _sim.Bodies.Add(_box.Body);
+            _sim.Bodies.Add(_planeBody);
+
+
             _rand = new Rand();
             _fps = new FPSHelper();
 
 
 
-            var ll = new JsonLoader();
-            _level = ll.Load("Content\\level.json", Content);
-
-            _plr = new Player();
-            _plr.Position = _level.PlayerStart;
-            _plr.CubeFront.Texture = _cellTex;
-            _plr.CubeFront.Color = Color.White;
-
-            _plr.CubeBack.Texture = _cellTex;
-            _plr.CubeBack.Color = Color.White;
 
 
-            _cam.Position = _level.CameraStart;
-            _cam.Target = _level.PlayerStart;
-            //_cam.Up = new Vector3(0, 0, 1);
-
-
-            _cam.Target = Vector3.Zero;
+            _cam.Target = new Vector3(0, 0, 0);
             base.Initialize();
         }
 
 
-        private float camAngle, camAngle2=.1f, objsAngle, lightAngle, objX;
+        private float camAngle = 1.57f, camAngle2=1.57f, objsAngle = 3, lightAngle, objX = 3;
         
         protected override void Update(GameTime gameTime)
         {
@@ -105,10 +115,6 @@ namespace DCG3
 
             _fps.OnUpdate(gameTime);
 
-            _plr.Update(gameTime);
-           // _cam.Update();
-
-            //_cam.Target = _plr.Position;
 
             if (KeyboardHelper.IsKeyDown(Keys.A))
             {
@@ -168,6 +174,22 @@ namespace DCG3
             }
             lightAngle += .01f;
 
+
+            //_sphere.Position = new Vector3(_sphere.Position.X, objX, _sphere.Position.Z);
+            //_sphere.Update();
+
+            _sim.Update(gameTime);
+            //_sphere.Update();
+
+            //if (_planeCollider.CheckCollision(_sphere.Collider).AnyContact)
+            //{
+            //    _sphere.Color = Color.Red;
+            //}
+            //else
+            //{
+            //    _sphere.Color = Color.White;
+            //}
+
             KeyboardHelper.Update();
             base.Update(gameTime);
         }
@@ -204,17 +226,19 @@ namespace DCG3
            // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
 
-            _pBatch.Cube(new Vector3(0, -1.4f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
+            _pBatch.Cube(new Vector3(0, -1f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
                 SamplerState.LinearWrap);
 
             //_pBatch.Sphere(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f), Color.White, _texGlobe );
 
-            _pBatch.Cube(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.Identity, Color.White, _pillowColor,_pillowNormal,Vector2.One,Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
+            //_pBatch.Cube(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.Identity, Color.White, _pillowColor,_pillowNormal,Vector2.One,Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
+
+            _box.Draw(_pBatch);
 
             //_pBatch.LightPoint(new Vector3(0, 2, 0), Color.DimGray, 5, 1f );
             _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.Red, 8f, 1f );
 
-            _pBatch.Flush(new Color(.1f, .1f, .1f, 1), _cam.Position, view, _cam.ProjectionMatrix);
+            _pBatch.Flush(new Color(.4f, .4f, .4f, 1), _cam.Position, view, _cam.ProjectionMatrix);
 
             base.Draw(gameTime);
         }
