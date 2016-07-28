@@ -21,6 +21,7 @@ namespace DCG.Framework.PrimtiveBatch
 
         private readonly GraphicsDevice _device;
         private readonly Texture2D _pixel;
+        private readonly Texture2D _pixelNormalDefault;
 
         private readonly SpriteBatch _sb;
         private readonly BasicEffect _effect;
@@ -73,9 +74,12 @@ namespace DCG.Framework.PrimtiveBatch
             _pixel = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
             _pixel.SetData(new Color[] { Color.White });
 
+            _pixelNormalDefault = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
+            _pixelNormalDefault.SetData(new Color[]{new Color(.5f,.5f,1f, 1), });
+
             // create a texture atlas and a batch collection
             AtlasShown = false;
-            _atlas = new TextureAtlas(device, 1024);
+            _atlas = new TextureAtlas(device, 2048);
             _atlas.EnsureTexture(_pixel);
             _batchColl = new BatchCollection();
 
@@ -311,33 +315,41 @@ namespace DCG.Framework.PrimtiveBatch
         #endregion
 
         #region Cube Methods
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation)
+        //public void Cube(Vector3 position, Vector3 size, Quaternion rotation)
+        //{
+        //    Cube(position, size, rotation, Color.White);   
+        //}
+
+        //public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color)
+        //{
+        //    Cube(position, size, rotation, color, null, Vector2.One, Vector2.Zero, SamplerState.PointClamp, TextureStyle.PerQuad);
+        //}
+
+        //public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture,
+        //    TextureStyle textureStyle = TextureStyle.PerQuad)
+        //{
+        //    Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.Zero, SamplerState.LinearClamp, textureStyle);
+        //}
+
+        //public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale,
+        //    SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad)
+        //{
+        //    Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.Zero, samplerState, textureStyle);
+        //}
+
+        //public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture,
+        //    Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
+        //{
+        //    Cube(position, size, rotation, color, texture, _pixelNormalDefault, textureScale, textureOffset, samplerState, textureStyle);
+        //}
+
+
+        public void Cube(RenderArgs args, TextureStyle textureStyle=TextureStyle.PerQuad)
         {
-            Cube(position, size, rotation, Color.White);   
+            Cube(args.Position, args.Size, args.Rotation, args.Color, args.ColorMap, args.NormalMap, args.TextureScale,
+                args.TextureOffset, args.SamplerState, textureStyle);
         }
 
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color)
-        {
-            Cube(position, size, rotation, color, null, Vector2.One, Vector2.Zero, SamplerState.PointClamp, TextureStyle.PerQuad);
-        }
-
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture,
-            TextureStyle textureStyle = TextureStyle.PerQuad)
-        {
-            Cube(position, size, rotation, Color.White, texture, Vector2.One, Vector2.Zero, SamplerState.LinearClamp, textureStyle);
-        }
-
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Texture2D texture, Vector2 textureScale,
-            SamplerState samplerState, TextureStyle textureStyle = TextureStyle.PerQuad)
-        {
-            Cube(position, size, rotation, Color.White, texture, textureScale, Vector2.Zero, samplerState, textureStyle);
-        }
-
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture,
-            Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
-        {
-            Cube(position, size, rotation, color, texture, null, textureScale, textureOffset, samplerState, textureStyle);
-        }
         /// <summary>
         /// Adds a cube to be drawn when flush() happens
         /// </summary>
@@ -349,7 +361,7 @@ namespace DCG.Framework.PrimtiveBatch
         /// <param name="textureScale">a texture coordinate scaling vector, used to tile textures</param>
         /// <param name="samplerState">the sampler state that the graphics device will be when this cube is actually drawn</param>
         /// <param name="textureStyle">the texture style for applying the texture to the cube</param>
-        public void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Texture2D normalMap,
+        private void Cube(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Texture2D normalMap,
             Vector2 textureScale, Vector2 textureOffset, SamplerState samplerState, TextureStyle textureStyle)
         {
 
@@ -365,7 +377,7 @@ namespace DCG.Framework.PrimtiveBatch
 
             if (normalMap == null)
             {
-                normalMap = _pixel;
+                normalMap = _pixelNormalDefault;
             }
 
             if (samplerState == null) // normally we use the texture atlas, and the samplerState is clamped
@@ -405,7 +417,12 @@ namespace DCG.Framework.PrimtiveBatch
 
         #region Sphere Methods
 
-        public void Sphere(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture)
+        public void Sphere(RenderArgs args)
+        {
+            Sphere(args.Position, args.Size, args.Rotation, args.Color, args.ColorMap, args.NormalMap);
+        }
+
+        private void Sphere(Vector3 position, Vector3 size, Quaternion rotation, Color color, Texture2D texture, Texture2D normalMap)
         {
 
             // TODO implement rotation
@@ -414,8 +431,12 @@ namespace DCG.Framework.PrimtiveBatch
             {
                 texture = _pixel;
             }
+            if (normalMap == null)
+            {
+                normalMap = _pixelNormalDefault;
+            }
 
-            var batch = GetBatch(texture, _pixel,SamplerState.LinearWrap);
+            var batch = GetBatch(texture, normalMap, SamplerState.LinearClamp);
 
             var oldVertexCount = batch.GetVertexArrayLength();
 
@@ -614,6 +635,7 @@ namespace DCG.Framework.PrimtiveBatch
 
         }
 
+
         #endregion
 
         #region DeferredFunctions
@@ -654,7 +676,7 @@ namespace DCG.Framework.PrimtiveBatch
             {
                 _device.RasterizerState = RasterizerState.CullClockwise;
             }
-            //_device.RasterizerState = RasterizerState.CullNone;
+            _device.RasterizerState = RasterizerState.CullNone;
 
             var dss = new DepthStencilState();
 
@@ -738,7 +760,7 @@ namespace DCG.Framework.PrimtiveBatch
         static PrimitiveBatch()
         {
             // work in here to create sphere points. 
-            SphereVerts = MakeUnitSphere(20, 20);
+            SphereVerts = MakeUnitSphere(15, 15);
 
 
         }

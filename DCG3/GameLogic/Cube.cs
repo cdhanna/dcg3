@@ -34,7 +34,19 @@ namespace DCG3.GameLogic
         public void Draw(IPrimitiveBatch pBatch)
         {
             //pBatch.Cube(Position, Size, Rotation, Color);
-             pBatch.Cube(Position, Size, Rotation, Color, Texture, UV, UVOffset, SamplerState.LinearWrap, TextureStyle);;
+            // pBatch.Cube(Position, Size, Rotation, Color, Texture, UV, UVOffset, SamplerState.LinearWrap, TextureStyle);;
+
+            pBatch.Cube(new RenderArgs()
+            {
+                Position = Position,
+                Size = Size,
+                Rotation = Rotation,
+                Color = Color,
+                ColorMap = Texture,
+                TextureScale = UV,
+                TextureOffset = UVOffset,
+                SamplerState = SamplerState.LinearWrap
+            }, TextureStyle);
             // pBatch.Draw(Position, Size, Quaternion.Identity,  Texture);
         }
     }

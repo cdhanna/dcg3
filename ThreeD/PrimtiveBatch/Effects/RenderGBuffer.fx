@@ -50,9 +50,6 @@ struct VertexShaderOutput
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 {
 	VertexShaderOutput output;
-	/*float4 worldPosition = mul(input.Position, World);
-		float4 viewPosition = mul(worldPosition, View);
-		output.Position = mul(viewPosition, Projection)*/
 	output.Position = mul(input.Position, WorldViewProj);
 	output.TexCoord = input.TexCoord;                            //pass the texture coordinates further
 	output.Normal = input.Normal;               //get normal into world space
@@ -69,19 +66,44 @@ struct PixelShaderOutput
 	float4 Depth : COLOR2;
 };
 
+
+float3x3 cotangent_frame(float3 N, float3 p, float2 uv) {
+
+	float3 dp1 = ddx(p);
+	float3 dp2 = ddy(p);
+	float2 duv1 = ddx(uv);
+	float2 duv2 = ddy(uv);
+
+	float3 dp2perp = cross(dp2, N);
+	float3 dp1perp = cross(N, dp1);
+	float3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+	float3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+
+	float invmax = rsqrt(max(dot(T,T), dot(B,B)));
+
+	return float3x3(T * invmax, B * invmax, N);
+}
+
 PixelShaderOutput PixelShaderFunction(VertexShaderOutput input)
 {
 	PixelShaderOutput output;
-	//output.Color = input.Color;
 	output.Color = tex2D(diffuseSampler, input.TexCoord) * input.Color;            //output Color
 	output.Color.a = specularIntensity;                                              //output SpecularIntensity
 	
-	float4 normalMap = tex2D(normalSampler, input.TexCoord);
+	float4 normalMap = (tex2D(normalSampler, input.TexCoord)) * 2.0 - 1.0;
+		normalMap.z = -normalMap.z;
+		//normalMap = -normalMap;
 
-	output.Normal.rgb = 0.5f * (normalize(-input.Normal) + 1.0f);    //transform normal domain
+	float3 position = 1;
+	position.x = input.TexCoord.x * 2.0f - 1.0f;
+	position.y = -(input.TexCoord.y * 2.0f - 1.0f);
+	position.z = input.Depth.x / input.Depth.y;
+
+	float3x3 TBN = cotangent_frame(normalize(input.Normal.xyz), -position, input.TexCoord);
+
+	output.Normal.rgb = .5f * normalize(mul(normalMap.xyz, TBN)) + 1.0f;
+	output.Normal.rgb -= .5f;
 	
-	//output.Normal.rgb = normalize(output.Normal.rgb + normalMap.rgb);
-
 	output.Normal.a = specularPower;                                            //output SpecularPower
 
 	output.Depth = input.Depth.x / input.Depth.y;                           //output Depth
@@ -97,8 +119,8 @@ technique Technique1
 	pass Pass1
 	{
 #if SM4
-		VertexShader = compile vs_4_0_level_9_1 VertexShaderFunction();
-		PixelShader = compile ps_4_0_level_9_1 PixelShaderFunction();
+		VertexShader = compile vs_4_0_level_9_3 VertexShaderFunction();
+		PixelShader = compile ps_4_0_level_9_3 PixelShaderFunction();
 
 #elif SM3
 

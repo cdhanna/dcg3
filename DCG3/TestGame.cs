@@ -27,6 +27,7 @@ namespace DCG3
 
         private Texture2D _texGlobe, _texAgu, _texNuke, _texC, _texAguStrip, _texBorderGlow, _cellTex, _stripeTex, _texFloor;
         private Texture2D _pillowColor, _pillowNormal;
+        private Texture2D _globeColor, _globeNormal;
         
         private Rand _rand;
         private FPSHelper _fps;
@@ -55,8 +56,10 @@ namespace DCG3
             _texFloor = Content.Load<Texture2D>("floor2");
             _texGlobe = Content.Load<Texture2D>("globe3");
 
-            _pillowNormal = Content.Load<Texture2D>("pillow_normal");
-            _pillowColor = Content.Load<Texture2D>("pillow_color");
+            _pillowNormal = Content.Load<Texture2D>("154_norm");
+            _pillowColor = Content.Load<Texture2D>("154");
+            _globeColor = Content.Load<Texture2D>("154");
+            _globeNormal = Content.Load<Texture2D>("154_norm");
             
 
 
@@ -204,17 +207,48 @@ namespace DCG3
            // _pBatch.Cube(Vector3.Zero + Vector3.UnitZ * b, Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, c), _texAgu, Vector2.One, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
 
-            _pBatch.Cube(new Vector3(0, -1.4f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
-                SamplerState.LinearWrap);
+            _pBatch.Cube(new RenderArgs()
+            {
+                Position = new Vector3(0, -1.4f, 0),
+                Size = new Vector3(20, 1, 20),
+                Rotation = Quaternion.Identity,
+                ColorMap = _texFloor,
+                TextureScale = Vector2.One * 5,
+                SamplerState = SamplerState.LinearWrap
+            });
 
-            //_pBatch.Sphere(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f), Color.White, _texGlobe );
+            //_pBatch.Cube(new Vector3(0, -1.4f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
+            //    SamplerState.LinearWrap);
 
-            _pBatch.Cube(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.Identity, Color.White, _pillowColor,_pillowNormal,Vector2.One,Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
+            _pBatch.Sphere(new RenderArgs()
+            {
+                Position = new Vector3(objX, .2f, 0),
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f),
+                ColorMap = _globeColor,
+                NormalMap = _globeNormal
+            });
 
-            //_pBatch.LightPoint(new Vector3(0, 2, 0), Color.DimGray, 5, 1f );
-            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.Red, 8f, 1f );
+            //_pBatch.Sphere(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f), Color.White, _globeColor, _globeNormal);
+
+            _pBatch.Cube(new RenderArgs()
+            {
+                Position = new Vector3((float)Math.Cos(lightAngle / 2) * 1.8f, .1f, (float)Math.Sin(lightAngle / 2) * 1.8f),
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, lightAngle * .3f),
+                ColorMap = _globeColor,
+                NormalMap = _globeNormal
+            });
+
+            //_pBatch.Cube(new Vector3((float)Math.Cos(lightAngle / 2) * 1.8f, .1f, (float)Math.Sin(lightAngle / 2) * 1.8f), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, lightAngle * .3f), Color.White, _pillowColor, _pillowNormal, Vector2.One, Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
+
+            _pBatch.LightPoint(new Vector3(2, 2, 0), Color.Aqua, 3, 1f);
+            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle)*2), Color.LimeGreen, 8f, 1f );
 
             _pBatch.Flush(new Color(.1f, .1f, .1f, 1), _cam.Position, view, _cam.ProjectionMatrix);
+
+            var args = new RenderArgs()
+            {
+                Position = Vector3.Zero
+            };
 
             base.Draw(gameTime);
         }

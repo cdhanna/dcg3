@@ -70,6 +70,7 @@
     <Compile Include="PrimtiveBatch\Batch.cs" />
     <Compile Include="PrimtiveBatch\Light.cs" />
     <Compile Include="PrimtiveBatch\PrimitiveBatch.cs" />
+    <Compile Include="PrimtiveBatch\RenderArgs.cs" />
     <Compile Include="PrimtiveBatch\TextureAtlas.cs" />
     <Compile Include="PrimtiveBatch\TextureAtlasIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
