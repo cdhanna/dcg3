@@ -7,6 +7,7 @@ using System.Net.Mime;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using DCG.Framework.PrimtiveBatch.ObjLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using DCG.Framework.PrimtiveBatch;
@@ -31,7 +32,7 @@ namespace DCG.Framework.PrimtiveBatch
         private readonly BatchCollection _batchColl;
         private readonly TextureAtlas _atlas;
 
-        private RenderTarget2D _colorRT, _normalRT, _depthRT, _lightRT, _finalRT; // the mysterious deferred render targets... 
+        private RenderTarget2D _colorRT, _normalRT, _depthRT, _lightRT, _finalRT, _shadowRT; // the mysterious deferred render targets... 
         private Vector2 _halfPixel;
 
         private List<DirectionalLight> _directionalLights;
@@ -51,6 +52,7 @@ namespace DCG.Framework.PrimtiveBatch
         public Effect DirectionalLightEffect { get; set; }
         public Effect CombineFinalEffect { get; set; }
         public Effect PointLightEffect { get; set; }
+        public Effect DepthEffect { get; set; }
         private FullScreenQuad quad;
 
         #endregion
@@ -117,7 +119,8 @@ namespace DCG.Framework.PrimtiveBatch
             var bbHeight = device.PresentationParameters.BackBufferHeight;
             _colorRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
             _normalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.None); // TODO watch out for depth format, its shifty... 
-            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Single, DepthFormat.None); // TODO watch out for depth format, its shifty... 
+            _depthRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Single, DepthFormat.Depth16); // TODO watch out for depth format, its shifty... 
+            _shadowRT = new RenderTarget2D(device, 1024, 1024, false, SurfaceFormat.Single, DepthFormat.Depth24); // TODO watch out for depth format, its shifty... 
             _lightRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
             _finalRT = new RenderTarget2D(device, bbWidth, bbHeight, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8); // TODO watch out for depth format, its shifty... 
             _halfPixel = new Vector2(.5f / bbWidth, .5f / bbHeight);
@@ -125,7 +128,7 @@ namespace DCG.Framework.PrimtiveBatch
             quad = new FullScreenQuad(_device);
 
         }
-
+        
         #endregion
 
         #region Begin and Flush
@@ -161,12 +164,7 @@ namespace DCG.Framework.PrimtiveBatch
 
             SetGBuffer();
             ClearGBuffer();
-          
-            ////// set basic effect parameters. TODO make the effect customizable from outside the PrimitiveBatch
-            //////_effect.Projection = projectionMatrix;
-            //////_effect.View = viewMatrix;
-            //////_effect.World = _worldMatrix;
-
+     
 
             _device.DepthStencilState = DepthStencilState.Default;
             _device.RasterizerState = RasterizerState.CullClockwise;
@@ -231,8 +229,8 @@ namespace DCG.Framework.PrimtiveBatch
             //_sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
             _sb.Begin();
             //_sb.Draw(_colorRT, Vector2.Zero, Color.White);
-            _sb.Draw(_colorRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
-            _sb.Draw(_normalRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_depthRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
+            _sb.Draw(_shadowRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
             _sb.Draw(_lightRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
             _sb.Draw(_finalRT, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
             _sb.End();
@@ -253,7 +251,7 @@ namespace DCG.Framework.PrimtiveBatch
         private void DrawLights(Vector3 camPosition, Matrix view, Matrix proj)
         {
 
-            _device.SetRenderTarget(_lightRT);
+            _device.SetRenderTargets(_lightRT);
             _device.Clear(Color.TransparentBlack);
 
             var lightBlender = new BlendState();
@@ -300,7 +298,7 @@ namespace DCG.Framework.PrimtiveBatch
         public void LightDirectional(Vector3 direction, Color color)
         {
             // create the light
-            var light = new DirectionalLight(direction, color);
+            var light = new DirectionalLight(direction, color, true);
 
             // and stash the light
             _directionalLights.Add(light);
@@ -346,8 +344,10 @@ namespace DCG.Framework.PrimtiveBatch
 
         public void Cube(RenderArgs args, TextureStyle textureStyle=TextureStyle.PerQuad)
         {
-            Cube(args.Position, args.Size, args.Rotation, args.Color, args.ColorMap, args.NormalMap, args.TextureScale,
-                args.TextureOffset, args.SamplerState, textureStyle);
+            Cube(args.Position, args.Size, args.Rotation, args.Color,
+                args.ColorMap, args.NormalMap,
+                args.TextureScale, args.TextureOffset,
+                args.SamplerState, textureStyle);
         }
 
         /// <summary>
@@ -389,7 +389,7 @@ namespace DCG.Framework.PrimtiveBatch
             Batch batch;
             var inAtlas = false;
 
-            ///samplerState = SamplerState.LinearWrap; // TODO HACK.
+            samplerState = SamplerState.LinearWrap; // TODO HACK.
             
             if (samplerState.Equals(SamplerState.LinearClamp)
                 || samplerState.Equals(SamplerState.PointClamp)
@@ -467,7 +467,7 @@ namespace DCG.Framework.PrimtiveBatch
 
 
                 batch.AddVertex(new VertexPositionColorNormalTexture(
-                    Vector3.Transform(position + vert.Position * size, transformMatrix),
+                    position + Vector3.Transform(vert.Position * size, transformMatrix),
                     color,
                     transformUV(vert.TextureCoordinate),
                     Vector3.Transform(vert.Normal, transformMatrix)));
@@ -478,6 +478,34 @@ namespace DCG.Framework.PrimtiveBatch
 
         #endregion
 
+        #region Model Methods
+
+        public void Model(DcgModel model, RenderArgs args)
+        {
+            var colorMap = args.ColorMap == null ? _pixel : args.ColorMap;
+            var normalMap = args.NormalMap == null ? _pixelNormalDefault : args.NormalMap;
+
+            var batch = GetBatch(colorMap, normalMap, args.SamplerState);
+
+            var transformMatrix = Matrix.CreateFromQuaternion(args.Rotation)
+                * Matrix.CreateScale(args.Size)
+                * Matrix.CreateTranslation(args.Position);
+            var normalTransform = Matrix.CreateFromQuaternion(args.Rotation);
+
+            var vertexOffset = (short) batch.GetVertexArrayLength();
+            for (var i = 0; i < model.Verticies.Length; i++)
+            {
+                var vert = model.Verticies[i];
+                batch.AddVertex(new VertexPositionColorNormalTexture(
+                    Vector3.Transform(vert.Position, transformMatrix),
+                    vert.Color,
+                    new Vector2(1f/i, 1f/i),
+                    Vector3.Transform(vert.Normal, normalTransform)));
+            }
+            batch.AddSomeIndicies(model.Indicies.ToArray(), vertexOffset);
+        }
+
+        #endregion
 
         #region Helper Methods
 
@@ -640,6 +668,34 @@ namespace DCG.Framework.PrimtiveBatch
 
         #region DeferredFunctions
 
+        private void DrawSceneSimple(Effect effect)
+        {
+
+            // time to iterate over all the batches. 
+            // each batch will effect graphics device configurations. 
+            _batchColl.GetAll().ForEach(batch =>
+            {
+
+                // get vertex data and index data, and set the graphics device to use them
+                var vBuffer = GetVBOForBatch(batch);
+                var iBuffer = GetIBOForBatch(batch);
+
+                var verts = batch.VertexArray;
+
+                vBuffer.SetData(batch.VertexArray);
+                iBuffer.SetData(batch.IndexArray);
+                _device.SetVertexBuffer(vBuffer);
+                _device.Indices = iBuffer;
+
+                // actually do the draw call. 
+
+                foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+                {
+                    pass.Apply(); // sends pass to gfx. 
+                    _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, batch.GetIndexArrayLength() / 3);
+                }
+            });
+        }
 
         private void DrawPointLight(PointLight light, Vector3 camPosition, Matrix view, Matrix projection)
         {
@@ -701,17 +757,66 @@ namespace DCG.Framework.PrimtiveBatch
 
         private void DrawDirectionalLight(DirectionalLight light, Vector3 camPosition, Matrix view, Matrix projection)
         {
+            var lightMatrix = Matrix.Identity;
+            if (light.Shadow != null)
+            {
+                // we need to render the shadow map!
+                var bindings = _device.GetRenderTargets();
+                _device.SetRenderTarget(_shadowRT);
+
+               
+
+                _device.Clear(Color.Black);
+
+                var lightView = Matrix.CreateLookAt(Vector3.Zero, -light.Direction, Vector3.UnitY);
+
+                lightMatrix = _worldMatrix
+                    * lightView
+                              * light.Shadow.Projection
+                              
+                              ;
+                DepthEffect.Parameters.TrySet("WorldViewProj", lightMatrix);
+
+
+                //_device.RasterizerState = RasterizerState.CullCounterClockwise;
+
+                //_device.DepthStencilState = DepthStencilState.DepthRead;
+                //_device.RasterizerState = RasterizerState.CullNone;
+                //_device.BlendState = BlendState.NonPremultiplied;
+
+                //_device.RasterizerState = RasterizerState.CullClockwise;
+                
+                DrawSceneSimple(DepthEffect);
+                //_device.RasterizerState = RasterizerState.CullClockwise;
+
+                //_device.SetRenderTarget(_lightRT);
+                _device.SetRenderTargets(bindings);
+
+                _device.DepthStencilState = DepthStencilState.Default;
+                _device.RasterizerState = RasterizerState.CullClockwise;
+                _device.BlendState = BlendState.Opaque;
+
+
+                //DirectionalLightEffect.Parameters.TrySet("lightMatrix", Matrix.Invert(
+                //     light.Shadow.Projection * lightView));
+                DirectionalLightEffect.Parameters.TrySet("lightMatrix", lightMatrix);
+            }
+
 
             //set all parameters
-            DirectionalLightEffect.Parameters["colorMap"].SetValue(_colorRT);
+            DirectionalLightEffect.Parameters.TrySet("colorMap", _colorRT);
+            DirectionalLightEffect.Parameters.TrySet("normalMap", _normalRT);
+            DirectionalLightEffect.Parameters.TrySet("depthMap", _depthRT);
+            //DirectionalLightEffect.Parameters["colorMap"].SetValue(_colorRT);
 
-            DirectionalLightEffect.Parameters["normalMap"].SetValue(_normalRT);
-            DirectionalLightEffect.Parameters["depthMap"].SetValue(_depthRT);
+            //DirectionalLightEffect.Parameters["normalMap"].SetValue(_normalRT);
+            //DirectionalLightEffect.Parameters["depthMap"].SetValue(_depthRT);
             DirectionalLightEffect.Parameters["lightDirection"].SetValue(light.Direction);
             DirectionalLightEffect.Parameters["Color"].SetValue(light.Color.ToVector3());
             DirectionalLightEffect.Parameters["cameraPosition"].SetValue(camPosition);
             DirectionalLightEffect.Parameters["InvertViewProjection"].SetValue(Matrix.Invert(view * projection));
             DirectionalLightEffect.Parameters["halfPixel"].SetValue(_halfPixel);
+            DirectionalLightEffect.Parameters.TrySet("shadowMap", _shadowRT);
 
             _device.RasterizerState = RasterizerState.CullCounterClockwise;
             //_device.DepthStencilState = DepthStencilState.None;

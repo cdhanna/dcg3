@@ -12,6 +12,10 @@ texture colorMap;
 texture normalMap;
 //depth
 texture depthMap;
+
+texture shadowMap;
+float4x4 lightMatrix;
+
 sampler colorSampler =sampler_state
 {
 	Texture = (colorMap);
@@ -21,8 +25,6 @@ sampler colorSampler =sampler_state
 	AddressU = WRAP;
 	AddressV = WRAP;
 };
-
-
 sampler depthSampler = sampler_state
 {
 	Texture = (depthMap);
@@ -42,6 +44,17 @@ sampler normalSampler = sampler_state
 	Mipfilter = POINT;
 };
 
+sampler shadowMapSampler = sampler_state
+{
+	Texture = (shadowMap);
+	AddressU = WRAP;
+	AddressV = WRAP;
+	MagFilter = LINEAR;
+	MinFilter = LINEAR;
+	Mipfilter = LINEAR;
+};
+
+
 struct VertexShaderInput
 {
 	float3 Position : POSITION0;
@@ -52,7 +65,6 @@ struct VertexShaderOutput
 {
 	float4 Position : POSITION0;
 	float2 TexCoord : TEXCOORD0;
-    //float4 Color : COLOR0;
 };
 float2 halfPixel;
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
@@ -62,9 +74,29 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	//align texture coordinates
 	output.TexCoord = input.TexCoord - halfPixel;
 	//output.Color = float4(1, 0, 0, 1);
+
+
 	return output;
 }
 
+float sampleShadowMap(float2 coords, float compare){
+	//return step(compare, tex2D(shadowMapSampler, coords.xy).r  );
+
+    float distance = tex2D(shadowMapSampler, coords.xy).r;
+    if (distance > compare)
+    {
+        return 0;
+    }
+    return 1;
+
+
+}
+float getShadowAmount(float4 shadowMapCoords){
+
+	float3 coords = (shadowMapCoords.xyz / shadowMapCoords.w) * 0.5f + 0.5f;
+		//return coords;
+		return sampleShadowMap(coords.xy , coords.z );
+}
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
@@ -80,7 +112,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	float specularIntensity = tex2D(colorSampler, input.TexCoord).a;
 
 	//read depth
-	float depthVal = tex2D(depthSampler, input.TexCoord).g;
+	float depthVal = tex2D(depthSampler, input.TexCoord).r;
 	//compute screen-space position
 	float4 position;
 	position.x = input.TexCoord.x * 2.0f - 1.0f;
@@ -90,6 +122,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	//transform to world space
 	position = mul(position, InvertViewProjection);
 	position /= position.w;
+
 
 	//surface-to-light vector
 	float3 lightVector = -normalize(lightDirection);
@@ -103,7 +136,34 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	//compute specular light
 	float specularLight = specularIntensity * pow(saturate(dot(reflectionVector, directionToCamera)), specularPower);
 	//output the two lights
-	return float4(diffuseLight.rgb, specularLight);
+	
+	float4 smc;
+	//smc.x = input.TexCoord.x * 2.0f - 1.0f;
+	//smc.y = -(input.TexCoord.y * 2.0f - 1.0f);
+	//smc.z = depthVal;
+	//smc.w = 1.0f;
+	////transform to world space
+	//smc = mul(smc, lightMatrix);
+	//smc /= smc.w;
+	smc = mul(position, lightMatrix);
+	smc /= smc.w;
+
+    smc.y *= -1;
+    //return smc;
+
+    if (NdL > .5f)
+    {
+        return float4(0, 0, 0, 0);
+    }
+
+    //return float4(NdL, NdL, NdL, 1);
+	//return position;
+	//return float4(getShadowAmount(smc), 1);
+	//return float4(input.TexCoord.xy, 1, 1); // SHOWS SCREEN SPACE
+
+	//return float4(depthVal, depthVal, depthVal, 1);
+	//return float4(smc.xyz, 1);
+	return float4(diffuseLight.rgb, specularLight) * getShadowAmount(smc);
 }
 
 technique Technique1

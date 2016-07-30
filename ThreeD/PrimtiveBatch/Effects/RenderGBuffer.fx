@@ -45,6 +45,7 @@ struct VertexShaderOutput
 	float2 TexCoord : TEXCOORD0;
 	float3 Normal : TEXCOORD1;
 	float2 Depth : TEXCOORD2;
+	float3 PosW :TEXCOORD3;
 };
 
 VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
@@ -56,6 +57,9 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	output.Depth.x = output.Position.z;
 	output.Depth.y = output.Position.w;
 	output.Color = input.Color;
+
+	output.PosW = input.Position.xyz / input.Position.w;
+	
 	return output;
 }
 
@@ -99,14 +103,19 @@ PixelShaderOutput PixelShaderFunction(VertexShaderOutput input)
 	position.y = -(input.TexCoord.y * 2.0f - 1.0f);
 	position.z = input.Depth.x / input.Depth.y;
 
-	float3x3 TBN = cotangent_frame(normalize(input.Normal.xyz), -position, input.TexCoord);
+	float3x3 TBN = cotangent_frame(normalize(input.Normal.xyz), -input.PosW, input.TexCoord);
 
 	output.Normal.rgb = .5f * normalize(mul(normalMap.xyz, TBN)) + 1.0f;
 	output.Normal.rgb -= .5f;
-	
+
+	//output.Normal.rgb = input.PosW;
+	//output.Normal.rgb = 0.5f * (normalize(-input.Normal) + 1.0f);
+
 	output.Normal.a = specularPower;                                            //output SpecularPower
 
 	output.Depth = input.Depth.x / input.Depth.y;                           //output Depth
+
+	//output.Depth = float4(input.Depth.y, 1, 0, 1);
 	return output;
 }
 

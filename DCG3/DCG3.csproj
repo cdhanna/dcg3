@@ -163,12 +163,28 @@
     <None Include="Content\basic.xnb">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Content\ObjSon\cow.obj.son">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\ObjSon\lamp.obj.son">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Content\level.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\ObjSon\Skyscraper.obj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Content\ObjSon\Skyscraper.obj.son">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ModelIO\ModelIO.csproj">
+      <Project>{975b7d9e-1f8b-4672-b0d4-375dc6f0e818}</Project>
+      <Name>ModelIO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ThreeD\Framework.csproj">
       <Project>{32bd0d8f-160b-44a8-8d76-8fc292475249}</Project>
       <Name>Framework</Name>

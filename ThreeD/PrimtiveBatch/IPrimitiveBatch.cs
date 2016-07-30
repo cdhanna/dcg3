@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DCG.Framework.PrimtiveBatch.ObjLoader;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -29,6 +30,7 @@ namespace DCG.Framework.PrimtiveBatch
 
         void Cube(RenderArgs args, TextureStyle textureStyle = TextureStyle.PerQuad);
         void Sphere(RenderArgs args);
+        void Model(DcgModel model, RenderArgs args);
 
 
         void LightDirectional(Vector3 direction, Color color);

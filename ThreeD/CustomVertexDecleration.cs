@@ -7,7 +7,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace DCG.Framework
 {
-    internal struct VertexPositionColorNormalTexture : IVertexType
+    public struct VertexPositionColorNormalTexture : IVertexType
     {
         public Vector3 Position;
         public Vector3 Normal;
