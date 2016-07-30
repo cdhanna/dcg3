@@ -151,10 +151,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
     smc.y *= -1;
     //return smc;
 
-    if (NdL > .5f)
-    {
-        return float4(0, 0, 0, 0);
-    }
+    
 
     //return float4(NdL, NdL, NdL, 1);
 	//return position;
