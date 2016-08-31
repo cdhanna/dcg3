@@ -20,6 +20,7 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
     {
         private const string OBJ_CODE_VERTEX = "v";
         private const string OBJ_CODE_FACE = "f";
+        private const string OBJ_CODE_VERTEX_TEXTURE = "vt";
 
         public static DcgModel Load(string objFile)
         {
@@ -49,6 +50,7 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
             var data = new List<ObjVertex>();
             var indicies = new List<short>();
 
+            var textureCoords = new List<Vector3>();
 
             var largestPoint = Vector3.Zero;
 
@@ -80,7 +82,26 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
                         });
 
                         break;
+
+                    case OBJ_CODE_VERTEX_TEXTURE:
+
+                        var uvw = new[] { 0f, 0f, 0f };
+                        var uvwIndex = 0;
+                        for (var t = 1; t < parts.Length; t++)
+                        {
+                            var value = float.Parse(parts[i]);
+                            uvw[uvwIndex] = value;
+                            value += 1;
+                        }
+                        textureCoords.Add(new Vector3(uvw[0], uvw[1], uvw[2]));
+
+                        break;
                     case OBJ_CODE_FACE:
+
+                        // need to check if the face command was written like
+                        // * f 1 2 3       : f v v v 
+                        // * f 1/1 2/2 3/3 : f v/vt v/vt v/vt
+
 
 
                         for (var t = 2; t < parts.Length - 1; t += 1)
@@ -100,6 +121,7 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
 
             }
 
+            // do we want to do this? Scale to 1
             for (var i = 0; i < data.Count; i++)
             {
                 data[i].Position /= largestPoint.Length();

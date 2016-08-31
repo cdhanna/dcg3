@@ -23,7 +23,7 @@ namespace DCG3.GameLogic
         {
             ProjectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(45f),
-                device.DisplayMode.AspectRatio, .1f, 60f);
+                device.DisplayMode.AspectRatio, .001f, 60.1f);
             Position = Vector3.Zero;
             Target = Vector3.Zero;
             Up = Vector3.Up;

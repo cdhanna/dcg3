@@ -44,7 +44,7 @@ namespace DCG.Framework.PrimtiveBatch
                 Vector3.Zero, Vector3.One, Quaternion.Identity, Color.White, 
                 null, null,
                 Vector2.One, Vector2.Zero,
-                SamplerState.LinearClamp)
+                SamplerState.LinearWrap)
         {
             // the defaults have been set. 
         }

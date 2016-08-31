@@ -232,8 +232,8 @@ namespace DCG3
 
             _pBatch.Cube(new RenderArgs()
             {
-                Position = new Vector3(5, -1.4f, 0),
-                Size = new Vector3(20, 1, 20),
+                Position = new Vector3(5, -1f, 0),
+                Size = new Vector3(30, 1, 30),
                 Rotation = Quaternion.Identity,
                 ColorMap = _texFloor,
                 TextureScale = Vector2.One * 5,
@@ -243,12 +243,13 @@ namespace DCG3
             //_pBatch.Cube(new Vector3(0, -1.4f, 0), new Vector3(20, 1, 20), Quaternion.Identity, _texFloor, Vector2.One * 5,
             //    SamplerState.LinearWrap);
 
-            _pBatch.Sphere(new RenderArgs()
+            _pBatch.Cube(new RenderArgs()
             {
-                Position = new Vector3(2, .2f, 0),
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f),
+                Position = new Vector3(2, 0, 0),
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.PiOver2 + .25f),
                 ColorMap = _globeColor,
-                NormalMap = _globeNormal
+                NormalMap = _globeNormal,
+                //Color = Color.Yellow
             });
 
             //_pBatch.Sphere(new Vector3(objX, .2f, 0), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .2f), Color.White, _globeColor, _globeNormal);
@@ -261,19 +262,28 @@ namespace DCG3
             //    NormalMap = _globeNormal
             //});
 
-            _pBatch.Model(_model, new RenderArgs()
+            for (var i = 0; i < 10; i++)
             {
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle * .3f),
-                Size = Vector3.One * 1.4f,
-                Position = new Vector3(-.4f, .5f, 0)
-            });
+                for (var j = 0; j < 1; j++)
+                {
 
+                    _pBatch.Model(_model, new RenderArgs()
+                    {
+                        Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle*.3f*((i%2)*2 - 1)),
+                        Size = Vector3.One*1.4f,
+                        Position = new Vector3((-i + 5)*3, .5f, (-i + 5)*3),
+                        Color = Color.DarkKhaki
+                    });
+                }
+
+            }
             //_pBatch.Cube(new Vector3((float)Math.Cos(lightAngle / 2) * 1.8f, .1f, (float)Math.Sin(lightAngle / 2) * 1.8f), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, lightAngle * .3f), Color.White, _pillowColor, _pillowNormal, Vector2.One, Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
-            //_pBatch.LightPoint(new Vector3(2, 2, 0), Color.Aqua, 3, 1f);
-            //_pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 2, 1, (float)Math.Sin(lightAngle) * 2), Color.LimeGreen, 8f, 1f);
+            _pBatch.LightPoint(new Vector3(2, 1, 0), Color.Aqua, 3, 1f);
+            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 0, 1, (float)Math.Sin(lightAngle) * 0), Color.LimeGreen, 3f, 1f);
 
-            _pBatch.LightDirectional(new Vector3((float)Math.Cos(lightAngle), 1f, (float)Math.Sin(lightAngle)), Color.LimeGreen);
+            //_pBatch.LightDirectional(new Vector3((float)Math.Cos(lightAngle), 1f, (float)Math.Sin(lightAngle)), Color.Purple);
+            _pBatch.LightDirectional(new Vector3(1f, 1f, 0f), Color.Purple);
 
             _pBatch.Flush(new Color(.1f, .1f, .1f, 1), _cam.Position, view, _cam.ProjectionMatrix);
 

@@ -54,7 +54,7 @@
     </Content>
     <Content Include="PrimtiveBatch\Effects\CombineFinal.fx" />
     <Content Include="PrimtiveBatch\Effects\DepthEffect.build.fx">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="PrimtiveBatch\Effects\DepthEffect.fx" />
     <Content Include="PrimtiveBatch\Effects\DirectionalLight.build.fx">

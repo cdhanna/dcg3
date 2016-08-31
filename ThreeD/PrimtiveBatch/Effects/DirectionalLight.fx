@@ -15,6 +15,7 @@ texture depthMap;
 
 texture shadowMap;
 float4x4 lightMatrix;
+bool shadowsEnabled;
 
 sampler colorSampler =sampler_state
 {
@@ -47,11 +48,11 @@ sampler normalSampler = sampler_state
 sampler shadowMapSampler = sampler_state
 {
 	Texture = (shadowMap);
-	AddressU = WRAP;
-	AddressV = WRAP;
-	MagFilter = LINEAR;
-	MinFilter = LINEAR;
-	Mipfilter = LINEAR;
+	AddressU = CLAMP;
+    AddressV = CLAMP;
+    MagFilter = ANISOTROPIC;
+    MinFilter = ANISOTROPIC;
+    Mipfilter = ANISOTROPIC;
 };
 
 
@@ -79,11 +80,11 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 	return output;
 }
 
-float sampleShadowMap(float2 coords, float compare){
+float sampleShadowMap(float2 coords, float compare, float bias){
 	//return step(compare, tex2D(shadowMapSampler, coords.xy).r  );
 
-    float distance = tex2D(shadowMapSampler, coords.xy).r;
-    if (distance > compare)
+    float distance = tex2D(shadowMapSampler, coords.xy ).r;
+    if (distance < compare - (bias / 1024.0f))
     {
         return 0;
     }
@@ -91,11 +92,28 @@ float sampleShadowMap(float2 coords, float compare){
 
 
 }
-float getShadowAmount(float4 shadowMapCoords){
+float getShadowAmount(float4 shadowMapCoords, float bias){
 
 	float3 coords = (shadowMapCoords.xyz / shadowMapCoords.w) * 0.5f + 0.5f;
 		//return coords;
-		return sampleShadowMap(coords.xy , coords.z );
+    return sampleShadowMap(coords.xy , shadowMapCoords.z, bias);
+}
+
+
+float vsmUpperBound(float2 moments, float t)
+{
+    float p = (t <= moments.x);
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, .00001f);
+    float d = t - moments.x;
+    float p_max = variance / (variance + d * d);
+    //return moments.x;
+    return max(p, p_max);
+}
+float vsmShadow(float2 lightTexCoord, float distanceToLight)
+{
+    float2 moments = tex2D(shadowMapSampler, lightTexCoord).rg;
+    return vsmUpperBound(moments, distanceToLight);
 }
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
@@ -149,9 +167,12 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	smc /= smc.w;
 
     smc.y *= -1;
-    //return smc;
 
-    
+
+    float3 coords = (smc.xyz / smc.w) * 0.5f + 0.5f;
+    float distance = tex2D(shadowMapSampler, coords.xy).r ;
+    //return float4(smc.z, distance, (smc.z < distance) ? 1 : 0, 1);
+    //return step(distance, coords.z);
 
     //return float4(NdL, NdL, NdL, 1);
 	//return position;
@@ -159,8 +180,18 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	//return float4(input.TexCoord.xy, 1, 1); // SHOWS SCREEN SPACE
 
 	//return float4(depthVal, depthVal, depthVal, 1);
-	//return float4(smc.xyz, 1);
-	return float4(diffuseLight.rgb, specularLight) * getShadowAmount(smc);
+	//return float4(coords.zzz, 1);
+    float bias = 5 * (1 - NdL);
+
+	float shadowContrib = vsmShadow(coords.xy, smc.z);
+	//shadowsEnabled = true;
+	//shadowContrib = 0;
+    return float4(diffuseLight.rgb, specularLight) * (shadowsEnabled ? shadowContrib : 1);
+    
+
+	//return float4(diffuseLight.rgb, specularLight) * (shadowsEnabled ? getShadowAmount(smc, bias) : 1);
+    //return float4(diffuseLight.rgb, specularLight) ;
+
 }
 
 technique Technique1

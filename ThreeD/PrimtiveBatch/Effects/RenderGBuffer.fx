@@ -127,6 +127,10 @@ technique Technique1
 {
 	pass Pass1
 	{
+
+        //ZEnable = TRUE;
+        //ZWriteEnable = TRUE;
+        //AlphaBlendEnable = FALSE;
 #if SM4
 		VertexShader = compile vs_4_0_level_9_3 VertexShaderFunction();
 		PixelShader = compile ps_4_0_level_9_3 PixelShaderFunction();

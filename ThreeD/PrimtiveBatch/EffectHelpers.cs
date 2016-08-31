@@ -25,5 +25,12 @@ namespace DCG.Framework.PrimtiveBatch
                 self[paramName].SetValue(paramValue);
             }
         }
+        public static void TrySet(this EffectParameterCollection self, string paramName, bool paramValue)
+        {
+            if (self[paramName] != null)
+            {
+                self[paramName].SetValue(paramValue);
+            }
+        }
     }
 }

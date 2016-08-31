@@ -21,7 +21,7 @@ namespace DCG.Framework.PrimtiveBatch
 
         public void SetAsOrtho()
         {
-            Projection = Matrix.CreateOrthographic(40, 40, -40, 40); // far plane? TODO
+            Projection = Matrix.CreateOrthographic(10, 10,  -30, 30); // far plane? TODO
         }
     }
 

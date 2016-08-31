@@ -47,7 +47,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 
 	float3 result = (diffuse.rgb * (ambient.rgb + light.rgb) ) + light.a;
-	return float4(result, 1);
+	return float4( (light.rgb * diffuse.rgb)  , 1);
 	
 }
 

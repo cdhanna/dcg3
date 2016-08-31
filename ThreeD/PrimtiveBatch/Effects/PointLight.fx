@@ -118,6 +118,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 	final.g = 1;
 	final.b = 1;
 	final.w = 1;*/
+    //final.a = 1.0f;
 		return final;
 }
 
