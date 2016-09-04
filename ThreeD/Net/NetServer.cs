@@ -17,8 +17,7 @@ namespace DCG.Framework.Net
         private static ManualResetEvent allDone = new ManualResetEvent(false);
         private Dictionary<int, NetPlayer> clients;
         private static int nextClientId = 0;
-
-
+        private bool shouldKeepRunning = true;
 
         public NetServer()
         {
@@ -28,20 +27,38 @@ namespace DCG.Framework.Net
             listenerThread.Start();
         }
 
+        public void Shutdown()
+        {
+            shouldKeepRunning = false;
+            listenerThread.Abort("okay");
+        }
+
         private void AwaitConnections()
         {
-            this.server.Start();
-            while (true)
+            try
             {
-                TcpClient client = this.server.AcceptTcpClient();
 
-                Thread clientThread = new Thread(new ParameterizedThreadStart(HandleInputs));
-                TcpClient tcpClient = (TcpClient)client;
-                var player = new NetPlayer(tcpClient);
 
-                clients.Add(player.Id, player);
+                this.server.Start();
+                while (shouldKeepRunning)
+                {
+                    TcpClient client = this.server.AcceptTcpClient();
 
-                clientThread.Start(player);
+                    Thread clientThread = new Thread(new ParameterizedThreadStart(HandleInputs));
+                    TcpClient tcpClient = (TcpClient)client;
+                    var player = new NetPlayer(tcpClient);
+
+                    clients.Add(player.Id, player);
+
+                    clientThread.Start(player);
+                }
+            }
+            catch (ThreadAbortException abortEx)
+            {
+                if (!abortEx.ExceptionState.Equals("okay"))
+                {
+                    throw new Exception("The thread was aborted and it wasnt okay!", abortEx);
+                }
             }
         }
 

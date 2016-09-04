@@ -38,11 +38,17 @@ namespace DCG3
 
         public TestNetGame(NetServer server) : base()
         {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
             this._server = server;
+
+            _plr = new PlayerNetTest();
         }
 
         public TestNetGame(string host, string port) : base()
         {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
             ClientNetManager<SomeNetState> clientNetManager = new ClientNetManager<SomeNetState>();
 
             _plr = new PlayerNetTest();
@@ -50,6 +56,15 @@ namespace DCG3
             clientNetManager.AddHandler(_plrNetHandler);
 
             _client = new NetClient<SomeNetState>(clientNetManager, host, int.Parse(port));
+        }
+
+        protected override void OnExiting(object sender, EventArgs args)
+        {
+            if (_server != null)
+            {
+                _server.Shutdown();
+            }
+            base.OnExiting(sender, args);
         }
 
         protected override void Initialize()

@@ -24,7 +24,7 @@ namespace DCG.Framework.Net
         {
             this.gameClient = gameClient;
             serverConnection = new TcpClient(host, port);
-
+            
             var stream = serverConnection.GetStream();
             var streamReader = new StreamReader(stream);
             var streamWriter = new StreamWriter(stream);
