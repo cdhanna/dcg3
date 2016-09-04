@@ -26,6 +26,7 @@ namespace DCG3
         private InputManager _inputManager;
 
         private PlayerNetTest _plr;
+        private PlayerStateHandler _plrNetHandler;
 
         public TestNetGame()
         {
@@ -41,6 +42,10 @@ namespace DCG3
         public TestNetGame(string host, string port) : base()
         {
             ClientNetManager<SomeNetState> clientNetManager = new ClientNetManager<SomeNetState>();
+
+            _plr = new PlayerNetTest();
+            _plrNetHandler = new PlayerStateHandler();
+            clientNetManager.AddHandler(_plrNetHandler);
 
             _client = new NetClient<SomeNetState>(clientNetManager, host, int.Parse(port));
         }
@@ -66,9 +71,7 @@ namespace DCG3
             _pBatch.PointLightEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/PointLight.build.fx");
             _pBatch.DepthEffect = Content.Load<Effect>("../PrimtiveBatch/Effects/DepthEffect.build.fx");
 
-
-            _plr = new PlayerNetTest();
-
+            
             base.Initialize();
         }
 
@@ -78,8 +81,17 @@ namespace DCG3
                 Exit();
 
             var inputCollection = _inputManager.Update();
-            _plr.Tick(inputCollection);
 
+            if (_client != null)
+            {
+                _client.QueueMessage(inputCollection);
+                _plr.Tick(inputCollection);
+            } else
+            {
+                // ? server stuff?
+                
+            }
+            
             base.Update(gameTime);
         }
 

@@ -24,7 +24,7 @@ namespace DCG.Framework.Net
             _handlers.Add(handler);
         }
 
-        public void SendInput(InputCollection ic)
+        public void BufferInput(InputCollection ic)
         {
             _bufferedInputs.AddElement(ic);
         }

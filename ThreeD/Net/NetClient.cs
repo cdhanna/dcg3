@@ -57,6 +57,7 @@ namespace DCG.Framework.Net
         public void QueueMessage(InputCollection inputs)
         {
             pendingInputs.Enqueue(inputs);
+            gameClient.BufferInput(inputs);
         }
 
         private void MessageRecvWorker(object obj)
