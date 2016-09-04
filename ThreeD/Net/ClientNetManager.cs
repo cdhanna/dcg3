@@ -10,13 +10,13 @@ namespace DCG.Framework.Net
     {
 
         private int _lastAckedStepNumber;
-        private List<InputCollection> _bufferedInputs;
+        private CicularBuffer<InputCollection> _bufferedInputs;
 
         private List<INetStateHandler<TState>> _handlers;
         public ClientNetManager()
         {
             _handlers = new List<INetStateHandler<TState>>();
-            _bufferedInputs = new List<InputCollection>();
+            _bufferedInputs = new CicularBuffer<InputCollection>(32);
         }
 
         public void AddHandler(INetStateHandler<TState> handler)
@@ -26,7 +26,7 @@ namespace DCG.Framework.Net
 
         public void SendInput(InputCollection ic)
         {
-            _bufferedInputs.Add(ic);
+            _bufferedInputs.AddElement(ic);
         }
 
         public void Update(TState state)
@@ -34,7 +34,7 @@ namespace DCG.Framework.Net
             _handlers.ForEach(handler =>
             {
                 handler.SetState(state);
-                _bufferedInputs.ForEach(ic => handler.ApplyInput(ic));
+                _bufferedInputs.PullToHead().ForEach(ic => handler.ApplyInput(ic));
 
             });
             
