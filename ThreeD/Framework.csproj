@@ -47,6 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomVertexDecleration.cs" />
+    <Compile Include="Net\Input.cs" />
+    <Compile Include="Net\NetState.cs" />
+    <Compile Include="Net\NetStateHandler.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
     <Compile Include="PrimtiveBatch\BatchConfig.cs" />
     <Content Include="PrimtiveBatch\Effects\CombineFinal.build.fx">
