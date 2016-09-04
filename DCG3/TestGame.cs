@@ -38,6 +38,9 @@ namespace DCG3
 
         private DcgModel _model;
 
+        private DcgModel _dude;
+        private Texture2D _dudeTex, _dudeNormal;
+
         public TestGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -63,6 +66,9 @@ namespace DCG3
             _pillowColor = Content.Load<Texture2D>("154");
             _globeColor = Content.Load<Texture2D>("154");
             _globeNormal = Content.Load<Texture2D>("154_norm");
+
+            _dudeTex = Content.Load<Texture2D>("ObjSon/generic_male01_d.png");
+            _dudeNormal = Content.Load<Texture2D>("ObjSon/generic_male01_n.png");
             
 
 
@@ -98,7 +104,10 @@ namespace DCG3
             //_cam.Up = new Vector3(0, 0, 1);
 
             _model = ObjLoader.Load("Content\\ObjSon\\cow.obj.son");
-            
+
+
+            var ola = new ObjLoaderAdvanced();
+            _dude = ola.Load("Content\\ObjSon\\generic_male_01.obj.son");
 
             _cam.Target = Vector3.Zero;
             base.Initialize();
@@ -192,6 +201,22 @@ namespace DCG3
 
             }
 
+            if (KeyboardHelper.IsKeyDown(Keys.Q))
+            {
+                var toTarget = new Vector2((float)Math.Cos(camAngle), (float)Math.Sin(camAngle));
+                var perp = toTarget;
+                ;
+                _cam.Target -= (new Vector3(0, 1, 0) * .1f);
+            }
+            if (KeyboardHelper.IsKeyDown(Keys.E))
+            {
+                var toTarget = new Vector2((float)Math.Cos(camAngle), (float)Math.Sin(camAngle));
+                var perp = toTarget;
+                ;
+                _cam.Target += (new Vector3(0, 1, 0) * .1f);
+
+            }
+
             lightAngle += .01f;
 
             KeyboardHelper.Update();
@@ -245,7 +270,7 @@ namespace DCG3
 
             _pBatch.Cube(new RenderArgs()
             {
-                Position = new Vector3(2, 0, 0),
+                Position = new Vector3(0, 0, 0),
                 Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, MathHelper.PiOver2 + .25f),
                 ColorMap = _globeColor,
                 NormalMap = _globeNormal,
@@ -262,28 +287,44 @@ namespace DCG3
             //    NormalMap = _globeNormal
             //});
 
-            for (var i = 0; i < 10; i++)
+            for (var i = 0; i < 4; i++)
             {
-                for (var j = 0; j < 1; j++)
+                for (var j = 0; j < 5; j++)
                 {
 
-                    _pBatch.Model(_model, new RenderArgs()
+                    _pBatch.Model(_dude, new RenderArgs()
                     {
-                        Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle*.3f*((i%2)*2 - 1)),
-                        Size = Vector3.One*1.4f,
-                        Position = new Vector3((-i + 5)*3, .5f, (-i + 5)*3),
-                        Color = Color.DarkKhaki
+                        ColorMap = _dudeTex,
+                        NormalMap = _dudeNormal,
+                        Position = new Vector3(i * 2,0,j)
                     });
                 }
-
             }
+
+            //for (var i = 0; i < 10; i++)
+            //{
+            //    for (var j = 0; j < 1; j++)
+            //    {
+
+            //        _pBatch.Model(_model, new RenderArgs()
+            //        {
+            //            Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitY, lightAngle*.3f*((i%2)*2 - 1)),
+            //            Size = Vector3.One*1.4f,
+            //            Position = new Vector3((-i + 5)*3, .5f, (-i + 5)*3),
+            //            Color = Color.DarkKhaki
+            //        });
+            //    }
+
+            //}
             //_pBatch.Cube(new Vector3((float)Math.Cos(lightAngle / 2) * 1.8f, .1f, (float)Math.Sin(lightAngle / 2) * 1.8f), Vector3.One, Quaternion.CreateFromAxisAngle(Vector3.UnitX, lightAngle * .3f), Color.White, _pillowColor, _pillowNormal, Vector2.One, Vector2.Zero, SamplerState.LinearWrap, TextureStyle.PerQuad);
 
-            _pBatch.LightPoint(new Vector3(2, 1, 0), Color.Aqua, 3, 1f);
-            _pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 0, 1, (float)Math.Sin(lightAngle) * 0), Color.LimeGreen, 3f, 1f);
+            _pBatch.LightPoint(new Vector3(2, 5, 0), Color.Gray, 30, 1f);
+            _pBatch.LightPoint(new Vector3(-1, 3, -1), Color.LightSalmon, 30, 1f);
+            //_pBatch.LightPoint(new Vector3(1, 3, 1), Color.LightSkyBlue, 30, 1f);
+            //_pBatch.LightPoint(new Vector3((float)Math.Cos(lightAngle) * 1, 4, (float)Math.Sin(lightAngle) * 1), Color.LightSalmon, 15f, 1f);
 
             //_pBatch.LightDirectional(new Vector3((float)Math.Cos(lightAngle), 1f, (float)Math.Sin(lightAngle)), Color.Purple);
-            _pBatch.LightDirectional(new Vector3(1f, 1f, 0f), Color.Purple);
+            //_pBatch.LightDirectional(new Vector3(.3f, .7f, .3f), Color.DarkGray);
 
             _pBatch.Flush(new Color(.1f, .1f, .1f, 1), _cam.Position, view, _cam.ProjectionMatrix);
 

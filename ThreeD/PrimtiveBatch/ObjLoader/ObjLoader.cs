@@ -48,7 +48,7 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
             var lines = File.ReadAllLines(objFile);
 
             var data = new List<ObjVertex>();
-            var indicies = new List<short>();
+            var indicies = new List<uint>();
 
             var textureCoords = new List<Vector3>();
 
@@ -102,14 +102,20 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
                         // * f 1 2 3       : f v v v 
                         // * f 1/1 2/2 3/3 : f v/vt v/vt v/vt
 
-
-
-                        for (var t = 2; t < parts.Length - 1; t += 1)
+                        if (parts[1].Contains("/"))
                         {
-                            indicies.Add((short)(short.Parse(parts[1]) - 1));
-                            indicies.Add((short)(short.Parse(parts[t + 0]) - 1));
-                            indicies.Add((short)(short.Parse(parts[t + 1]) - 1));
+
+                        } else
+                        {
+                            for (var t = 2; t < parts.Length - 1; t += 1)
+                            {
+                                indicies.Add((uint)(uint.Parse(parts[1]) - 1));
+                                indicies.Add((uint)(uint.Parse(parts[t + 0]) - 1));
+                                indicies.Add((uint)(uint.Parse(parts[t + 1]) - 1));
+                            }
                         }
+
+                       
 
                         break;
                     //case "s":
@@ -133,13 +139,13 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
                 var i2 = indicies[i + 1] ;
                 var i3 = indicies[i + 2] ;
 
-                var v0 = data[i2].Position - data[i1].Position;
-                var v1 = data[i3].Position - data[i1].Position;
+                var v0 = data[(int)i2].Position - data[(int)i1].Position;
+                var v1 = data[(int)i3].Position - data[(int)i1].Position;
 
                 var normal = Vector3.Cross(v0, v1);
-                data[i1].Normal += normal;
-                data[i2].Normal += normal;
-                data[i3].Normal += normal;
+                data[(int)i1].Normal += normal;
+                data[(int)i2].Normal += normal;
+                data[(int)i3].Normal += normal;
 
             }
 

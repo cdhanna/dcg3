@@ -106,7 +106,7 @@ namespace DCG.Framework.PrimtiveBatch
 
 
             _pointLightVbuffer = new VertexBuffer(_device, typeof(VertexPositionColorNormalTexture), SphereVerts.Length, BufferUsage.None);
-            _pointLightIBuffer = new IndexBuffer(_device, typeof (short), SphereIndicies.Length, BufferUsage.None);
+            _pointLightIBuffer = new IndexBuffer(_device, typeof (uint), SphereIndicies.Length, BufferUsage.None);
             _pointLightVbuffer.SetData(SphereVerts);
             _pointLightIBuffer.SetData(SphereIndicies);
 
@@ -419,7 +419,7 @@ namespace DCG.Framework.PrimtiveBatch
             // and the addcubeIndicies function will add index data directly into the batch
             //batch.AddCubeIndicies();
 
-            batch.AddSomeIndicies(CubeIndicies, (short)oldVertexCount);
+            batch.AddSomeIndicies(CubeIndicies, (uint)oldVertexCount);
         }
 
         #endregion
@@ -482,7 +482,7 @@ namespace DCG.Framework.PrimtiveBatch
                     Vector3.Transform(vert.Normal, transformMatrix)));
 
             }
-            batch.AddSomeIndicies(SphereIndicies, (short) oldVertexCount);
+            batch.AddSomeIndicies(SphereIndicies, (uint) oldVertexCount);
         }
 
         #endregion
@@ -501,14 +501,15 @@ namespace DCG.Framework.PrimtiveBatch
                 * Matrix.CreateTranslation(args.Position);
             var normalTransform = Matrix.CreateFromQuaternion(args.Rotation);
 
-            var vertexOffset = (short) batch.GetVertexArrayLength();
+            var vertexOffset = (uint) batch.GetVertexArrayLength();
             for (var i = 0; i < model.Verticies.Length; i++)
             {
                 var vert = model.Verticies[i];
                 batch.AddVertex(new VertexPositionColorNormalTexture(
                     Vector3.Transform(vert.Position, transformMatrix),
                     args.Color,
-                    new Vector2(1f/i, 1f/i),
+                    vert.TextureCoordinate,
+                    //new Vector2(1f/i, 1f/i),
                     Vector3.Transform(vert.Normal, normalTransform)));
             }
             batch.AddSomeIndicies(model.Indicies.ToArray(), vertexOffset);
@@ -590,7 +591,7 @@ namespace DCG.Framework.PrimtiveBatch
 
             if (create)
             {
-                var nextIbo = new DynamicIndexBuffer(_device, typeof(short), batch.IndexArray.Length, BufferUsage.None);
+                var nextIbo = new DynamicIndexBuffer(_device, typeof(uint), batch.IndexArray.Length, BufferUsage.None);
 
                 // if we used to have a vbo, we need to toss the old one
                 if (had)
@@ -881,7 +882,7 @@ namespace DCG.Framework.PrimtiveBatch
         }
 
 
-        private static readonly short[] CubeIndicies = new short[]
+        private static readonly uint[] CubeIndicies = new uint[]
         {
             0, 1, 2, 0, 2, 3,
             4, 5, 6, 4, 6, 7,
@@ -890,7 +891,7 @@ namespace DCG.Framework.PrimtiveBatch
             16, 17, 18, 16, 18, 19,
             20, 21, 22, 20, 22, 23
         };
-        private static short[] SphereIndicies;
+        private static uint[] SphereIndicies;
         private static VertexPositionColorNormalTexture[] MakeUnitSphere(int circleNum, int radialNum)
         {
 
@@ -969,7 +970,7 @@ namespace DCG.Framework.PrimtiveBatch
 
             // making the indecies!
 
-            var indicies = new List<short>();
+            var indicies = new List<uint>();
             for (var i = 0; i < circleNum - 1; i++)
             {
                 for (var j = 0; j < radialNum; j++)
@@ -977,19 +978,19 @@ namespace DCG.Framework.PrimtiveBatch
                    
                     
 
-                    var topLeft = (short)(i * (radialNum + 1) + j);
-                    var topRight = (short) ((topLeft + 1) );
+                    var topLeft = (uint)(i * (radialNum + 1) + j);
+                    var topRight = (uint) ((topLeft + 1) );
                     //if (topRight >= (i + 1) * radialNum)
                     //{
-                    //    topRight -= (short)radialNum;
+                    //    topRight -= (uint)radialNum;
                     //}
 
 
-                    var botLeft = (short) (topLeft + radialNum + 1);
-                    var botRight = (short) ( (botLeft + 1)  );
+                    var botLeft = (uint) (topLeft + radialNum + 1);
+                    var botRight = (uint) ( (botLeft + 1)  );
                     //if (botRight >= (i + 2) * radialNum)
                     //{
-                    //    botRight -= (short)radialNum;
+                    //    botRight -= (uint)radialNum;
                     //}
 
 
@@ -1003,22 +1004,22 @@ namespace DCG.Framework.PrimtiveBatch
                 }
             }
 
-            for (short j = 0; j < radialNum; j++)
+            for (uint j = 0; j < radialNum; j++)
             {
 
-                indicies.Add((short)(botIndexStart + j));
+                indicies.Add((uint)(botIndexStart + j));
                 indicies.Add(j);
-                indicies.Add((short)((j + 1)));
+                indicies.Add((uint)((j + 1)));
 
 
-                indicies.Add((short)(topIndexStart + j));
-                indicies.Add((short)((circleNum - 1) * (radialNum + 1) + j + 1));
-                indicies.Add((short)((circleNum - 1) * (radialNum + 1) + j));
+                indicies.Add((uint)(topIndexStart + j));
+                indicies.Add((uint)((circleNum - 1) * (radialNum + 1) + j + 1));
+                indicies.Add((uint)((circleNum - 1) * (radialNum + 1) + j));
 
 
 
-                //indicies.Add((short)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
-                //indicies.Add((short)(calcVertNum(circleNum - 1, 0) + j));
+                //indicies.Add((uint)(calcVertNum(circleNum - 1, 0) + ((j + 1) % radialNum)));
+                //indicies.Add((uint)(calcVertNum(circleNum - 1, 0) + j));
 
             }
 

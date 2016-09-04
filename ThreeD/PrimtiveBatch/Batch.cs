@@ -13,7 +13,7 @@ namespace DCG.Framework.PrimtiveBatch
         public BatchConfig Config { get; set; }
 
         public VertexPositionColorNormalTexture[] VertexArray { get; set; }
-        public short[] IndexArray { get; set; }
+        public uint[] IndexArray { get; set; }
         public int VertexArrayCapacity { get; set; }
         public int IndexArrayCapacity { get; set; }
 
@@ -21,7 +21,7 @@ namespace DCG.Framework.PrimtiveBatch
         private int _vertexArrayRunningIndex;
         private int _count;
 
-        private static readonly short[] CubeIndicies = new short[]
+        private static readonly uint[] CubeIndicies = new uint[]
         {
             0, 1, 2, 0, 2, 3,
             4, 5, 6, 4, 6, 7,
@@ -36,12 +36,12 @@ namespace DCG.Framework.PrimtiveBatch
             
             Config = config;
 
-            VertexArrayCapacity = 4000;
-            IndexArrayCapacity = 4000;
+            VertexArrayCapacity = 8000;
+            IndexArrayCapacity = 8000;
             _vertexArrayRunningIndex = 0;
             _indexArrayRunningIndex = 0;
             VertexArray = new VertexPositionColorNormalTexture[VertexArrayCapacity];
-            IndexArray = new short[IndexArrayCapacity];
+            IndexArray = new uint[IndexArrayCapacity];
         }
 
         public void AddVertex(VertexPositionColorNormalTexture v)
@@ -65,13 +65,13 @@ namespace DCG.Framework.PrimtiveBatch
             return _vertexArrayRunningIndex;
         }
 
-        public void AddSomeIndicies(short[] indicies, short offset)
+        public void AddSomeIndicies(uint[] indicies, uint offset)
         {
             // check and make sure that our size is big enough to hold the new indicies.
             while (_indexArrayRunningIndex + indicies.Length >= IndexArrayCapacity)
             {
                 IndexArrayCapacity *= 2;
-                var next = new short[IndexArrayCapacity];
+                var next = new uint[IndexArrayCapacity];
                 Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
                 IndexArray = next;
             }
@@ -80,7 +80,7 @@ namespace DCG.Framework.PrimtiveBatch
             // time to go in and add the 36 points for each cube.
             for (int i = 0; i < indicies.Length; i++)
             {
-                IndexArray[i + _indexArrayRunningIndex] = (short)(indicies[i] + (short)offset);
+                IndexArray[i + _indexArrayRunningIndex] = (uint)(indicies[i] + (uint)offset);
             }
            
             _indexArrayRunningIndex += indicies.Length;
@@ -94,7 +94,7 @@ namespace DCG.Framework.PrimtiveBatch
         //    if (_indexArrayRunningIndex + CubeIndicies.Length >= IndexArrayCapacity)
         //    {
         //        IndexArrayCapacity *= 2;
-        //        var next = new short[IndexArrayCapacity];
+        //        var next = new uint[IndexArrayCapacity];
         //        Array.Copy(IndexArray, 0, next, 0, IndexArray.Length);
         //        IndexArray = next;
         //    }
@@ -102,7 +102,7 @@ namespace DCG.Framework.PrimtiveBatch
         //    // time to go in and add the 36 points for each cube.
         //    for (int i = 0; i < CubeIndicies.Length; i++)
         //    {
-        //        IndexArray[i + _indexArrayRunningIndex] = (short) (CubeIndicies[i] + (short)_count);
+        //        IndexArray[i + _indexArrayRunningIndex] = (uint) (CubeIndicies[i] + (uint)_count);
         //    }
         //    _count += 24;
         //    _indexArrayRunningIndex += CubeIndicies.Length;

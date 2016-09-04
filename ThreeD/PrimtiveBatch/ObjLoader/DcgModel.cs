@@ -10,7 +10,7 @@ namespace DCG.Framework.PrimtiveBatch.ObjLoader
     {
 
         public VertexPositionColorNormalTexture[] Verticies;
-        public List<short> Indicies;
+        public List<uint> Indicies;
 
     }
 }

@@ -75,6 +75,7 @@
     <Compile Include="PrimtiveBatch\Light.cs" />
     <Compile Include="PrimtiveBatch\ObjLoader\DcgModel.cs" />
     <Compile Include="PrimtiveBatch\ObjLoader\ObjLoader.cs" />
+    <Compile Include="PrimtiveBatch\ObjLoader\ObjLoaderAdvanced.cs" />
     <Compile Include="PrimtiveBatch\PrimitiveBatch.cs" />
     <Compile Include="PrimtiveBatch\RenderArgs.cs" />
     <Compile Include="PrimtiveBatch\TextureAtlas.cs" />
