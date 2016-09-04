@@ -62,7 +62,6 @@ namespace DCG3
         {
             if (_server != null)
             {
-                _server.Shutdown();
             }
             base.OnExiting(sender, args);
         }
