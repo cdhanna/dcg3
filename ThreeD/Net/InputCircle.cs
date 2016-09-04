@@ -6,13 +6,7 @@ using System.Threading.Tasks;
 
 namespace DCG.Framework.Net
 {
-    public interface INetStateHandler<TState> where TState : NetState
+    class InputCircle
     {
-        void SetState(TState state);
-
-        void ApplyInput(InputCollection inputs);
     }
-
-
-
 }
