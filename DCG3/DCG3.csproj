@@ -44,10 +44,6 @@
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="GameLogic\Cube.cs" />
-    <Compile Include="GameLogic\JsonLoader.cs" />
-    <Compile Include="GameLogic\Level.cs" />
-    <Compile Include="GameLogic\Player.cs" />
     <Compile Include="GameLogic\SimpleCamera.cs" />
     <Compile Include="NetTest\Inputs.cs" />
     <Compile Include="NetTest\KeyboardInput.cs" />
