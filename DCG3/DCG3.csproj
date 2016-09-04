@@ -188,9 +188,6 @@
     <None Include="Content\level.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Content\ObjSon\Skyscraper.obj">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Content\ObjSon\Skyscraper.obj.son">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
