@@ -32,14 +32,16 @@ namespace DCG3.NetTest
         public void Tick(InputCollection ic)
         {
 
-            var acc = ic.Get<MoveInput>();
-            if (acc != null)
-            {
-                Velocity += acc.TypedValue;
-            }
+            //var acc = ic.Get<MoveInput>();
+            //if (acc != null)
+            //{
+            //    Velocity += acc.TypedValue;
+            //}
             //Velocity += ic.Get<MoveInput>()?.TypedValue;
 
-            Velocity += -Velocity * .8f;    // friction
+            ic.Get<MoveInput>().ForEach(i => Velocity += i.TypedValue);
+
+            Velocity += -Velocity * .5f;    // friction
             Position += Velocity;           // additive motion
 
         }

@@ -40,7 +40,7 @@ namespace DCG3
             _pBatch.RenderDebug = false;
             _cam = new SimpleCamera(GraphicsDevice);
 
-            _cam.Position = new Vector3(0, 0, 5);
+            _cam.Position = new Vector3(0, 0, 15);
             _cam.Target = Vector3.Zero;
 
 

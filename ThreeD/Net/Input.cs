@@ -13,6 +13,7 @@ namespace DCG.Framework.Net
     public interface Input
     {
         object Value { get; }
+        
     }
     public abstract class InputTyped<T> : Input
     {
@@ -38,10 +39,14 @@ namespace DCG.Framework.Net
 
         
 
-        public T Get<T>() 
+        public List<T> Get<T>() 
             where T : class , Input
         {
-            return (T)_inputs.FirstOrDefault(i => i.GetType().IsEquivalentTo(typeof(T)));
+            
+            return _inputs
+                .Where(i => i.GetType().IsEquivalentTo(typeof(T)))
+                .Cast<T>()
+                .ToList();
         }
 
 
