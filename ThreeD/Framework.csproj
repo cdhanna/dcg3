@@ -47,7 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CustomVertexDecleration.cs" />
+    <Compile Include="Net\ClientNetManager.cs" />
     <Compile Include="Net\Input.cs" />
+    <Compile Include="Net\InputCircle.cs" />
     <Compile Include="Net\InputGenerator.cs" />
     <Compile Include="Net\InputManager.cs" />
     <Compile Include="Net\NetPlayer.cs" />
