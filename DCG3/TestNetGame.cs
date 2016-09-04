@@ -38,9 +38,11 @@ namespace DCG3
             this._server = server;
         }
 
-        public TestNetGame(NetClient client) : base()
+        public TestNetGame(string host, string port) : base()
         {
-            _client = client;
+            ClientNetManager<SomeNetState> clientNetManager = new ClientNetManager<SomeNetState>();
+
+            _client = new NetClient<SomeNetState>(clientNetManager, host, int.Parse(port));
         }
 
         protected override void Initialize()
