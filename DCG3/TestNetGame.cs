@@ -18,7 +18,7 @@ namespace DCG3
     public class TestNetGame : Game
     {
         private NetServer _server;
-        private NetClient _client;
+        private NetClient<SomeNetState> _client;
         private GraphicsDeviceManager _graphics;
         private PrimitiveBatch _pBatch;
         private SimpleCamera _cam;
