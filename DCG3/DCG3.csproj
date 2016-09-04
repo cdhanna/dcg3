@@ -50,6 +50,7 @@
     <Compile Include="GameLogic\Player.cs" />
     <Compile Include="GameLogic\SimpleCamera.cs" />
     <Compile Include="NetTest\Inputs.cs" />
+    <Compile Include="NetTest\KeyboardInput.cs" />
     <Compile Include="NetTest\Player.cs" />
     <Compile Include="NetTest\SomeNetState.cs" />
     <Compile Include="TestGame.cs" />

@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace DCG.Framework.Net
 {
+
+    
+
     public interface Input
     {
         object Value { get; }

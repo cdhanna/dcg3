@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="CustomVertexDecleration.cs" />
     <Compile Include="Net\Input.cs" />
+    <Compile Include="Net\InputGenerator.cs" />
+    <Compile Include="Net\InputManager.cs" />
     <Compile Include="Net\NetState.cs" />
     <Compile Include="Net\NetStateHandler.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
