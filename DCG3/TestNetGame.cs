@@ -17,6 +17,8 @@ namespace DCG3
 {
     public class TestNetGame : Game
     {
+        private NetServer _server;
+        private NetClient _client;
         private GraphicsDeviceManager _graphics;
         private PrimitiveBatch _pBatch;
         private SimpleCamera _cam;
@@ -29,8 +31,16 @@ namespace DCG3
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+        }
 
+        public TestNetGame(NetServer server) : base()
+        {
+            this._server = server;
+        }
 
+        public TestNetGame(NetClient client) : base()
+        {
+            _client = client;
         }
 
         protected override void Initialize()
