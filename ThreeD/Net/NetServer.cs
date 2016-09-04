@@ -16,7 +16,6 @@ namespace DCG.Framework.Net
         private Thread listenerThread;
         private static ManualResetEvent allDone = new ManualResetEvent(false);
         private Dictionary<int, NetPlayer> clients;
-        private static int nextClientId = 0;
 
 
 
@@ -30,43 +29,13 @@ namespace DCG.Framework.Net
 
         private void AwaitConnections()
         {
-            this.server.Start();
+            server.Start();
             while (true)
             {
                 TcpClient client = this.server.AcceptTcpClient();
-
-                Thread clientThread = new Thread(new ParameterizedThreadStart(HandleInputs));
-                TcpClient tcpClient = (TcpClient)client;
-                var player = new NetPlayer(tcpClient);
-
+                var player = new NetPlayer(client);
                 clients.Add(player.Id, player);
-
-                clientThread.Start(player);
             }
-        }
-
-        private void HandleInputs(object p)
-        {
-            var player = (NetPlayer) p;
-            var stream = player.Socket.GetStream();
-            var streamWriter = new StreamWriter(stream);
-            var streamReader = new StreamReader(stream);
-
-            var buffer = new byte[1024];
-            streamWriter.WriteLine("Welcome, player " + player.Id);
-            streamWriter.Flush();
-            while (!streamReader.EndOfStream)
-            {
-                Console.WriteLine(streamReader.ReadLine());
-            }
-        }
-
-        private void AcceptCallback(IAsyncResult ar)
-        {
-            Socket listener = (Socket)ar.AsyncState;
-            Socket handler = listener.EndAccept(ar);
-            Console.WriteLine("got connection from {0}", listener.RemoteEndPoint);
-            allDone.Reset();
         }
     }
 }
