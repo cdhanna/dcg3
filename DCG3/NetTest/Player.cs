@@ -33,11 +33,14 @@ namespace DCG3.NetTest
         {
 
             var acc = ic.Get<MoveInput>();
-            Velocity += acc.TypedValue;
-            //Velocity += ic.Get<MoveInput>()?.Value;
+            if (acc != null)
+            {
+                Velocity += acc.TypedValue;
+            }
+            //Velocity += ic.Get<MoveInput>()?.TypedValue;
 
-            Velocity += -Velocity * .9f;    // friction
-            Velocity += Position;           // additive motion
+            Velocity += -Velocity * .8f;    // friction
+            Position += Velocity;           // additive motion
 
         }
 

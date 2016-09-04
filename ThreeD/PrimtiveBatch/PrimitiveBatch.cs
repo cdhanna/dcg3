@@ -60,6 +60,7 @@ namespace DCG.Framework.PrimtiveBatch
         #region Public Properties ...
 
         public bool HasBegun { get; private set; }
+        public bool RenderDebug { get; set; }
         public bool AtlasShown { get; set; }
 
         #endregion
@@ -71,6 +72,8 @@ namespace DCG.Framework.PrimtiveBatch
             // grab graphics device info
             _device = device;
             _sb = new SpriteBatch(device);
+
+            RenderDebug = true;
 
             // create a utility pixel texture to use if no texture is supplied
             _pixel = new Texture2D(device, 1, 1, false, SurfaceFormat.Color);
@@ -231,10 +234,16 @@ namespace DCG.Framework.PrimtiveBatch
             //_sb.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearWrap, DepthStencilState.Default, RasterizerState.CullNone);
             _sb.Begin();
             //_sb.Draw(_colorRT, Vector2.Zero, Color.White);
-            _sb.Draw(_colorRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
-            _sb.Draw(_shadowRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
-            _sb.Draw(_lightRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
-            _sb.Draw(_finalRT, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
+            if (RenderDebug)
+            {
+                _sb.Draw(_colorRT, new Rectangle(0, 0, halfWidth, halfHeight), Color.White);
+                _sb.Draw(_shadowRT, new Rectangle(halfWidth, 0, halfWidth, halfHeight), Color.White);
+                _sb.Draw(_lightRT, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
+                _sb.Draw(_finalRT, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
+            } else
+            {
+                _sb.Draw(_finalRT, Vector2.Zero, Color.White);
+            }
             _sb.End();
 
            
