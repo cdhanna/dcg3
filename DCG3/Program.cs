@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DCG.Framework.Net;
+using System;
 
 namespace DCG3
 {
@@ -12,10 +13,16 @@ namespace DCG3
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             using (var game = new TestNetGame())
+            {
+                if (args.Length > 0 && args[0] == "server")
+                {
+                    var server = new NetServer();
+                }
                 game.Run();
+            }
         }
     }
 #endif

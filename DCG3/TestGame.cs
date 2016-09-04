@@ -11,6 +11,7 @@ using DCG.Framework;
 using DCG.Framework.Menu;
 using DCG.Framework.PrimtiveBatch;
 using DCG.Framework.Util;
+using DCG3.NetTest;
 
 namespace DCG3
 {
@@ -33,7 +34,6 @@ namespace DCG3
         private Rand _rand;
         private FPSHelper _fps;
 
-        private Level _level;
         private Player _plr;
 
         private DcgModel _model;
@@ -49,6 +49,7 @@ namespace DCG3
 
         protected override void Initialize()
         {
+
             _pBatch = new PrimitiveBatch(GraphicsDevice);
             _cam = new SimpleCamera(GraphicsDevice);
 
@@ -86,23 +87,6 @@ namespace DCG3
             _fps = new FPSHelper();
 
 
-
-            var ll = new JsonLoader();
-            _level = ll.Load("Content\\level.json", Content);
-
-            _plr = new Player();
-            _plr.Position = _level.PlayerStart;
-            _plr.CubeFront.Texture = _cellTex;
-            _plr.CubeFront.Color = Color.White;
-
-            _plr.CubeBack.Texture = _cellTex;
-            _plr.CubeBack.Color = Color.White;
-
-
-            _cam.Position = _level.CameraStart;
-            _cam.Target = _level.PlayerStart;
-            //_cam.Up = new Vector3(0, 0, 1);
-
             _model = ObjLoader.Load("Content\\ObjSon\\cow.obj.son");
 
 
@@ -123,7 +107,6 @@ namespace DCG3
 
             _fps.OnUpdate(gameTime);
 
-            _plr.Update(gameTime);
            // _cam.Update();
 
             //_cam.Target = _plr.Position;

@@ -50,8 +50,10 @@
     <Compile Include="Net\Input.cs" />
     <Compile Include="Net\InputGenerator.cs" />
     <Compile Include="Net\InputManager.cs" />
+    <Compile Include="Net\NetPlayer.cs" />
     <Compile Include="Net\NetState.cs" />
     <Compile Include="Net\NetStateHandler.cs" />
+    <Compile Include="Net\NetServer.cs" />
     <Compile Include="PrimtiveBatch\BatchCollection.cs" />
     <Compile Include="PrimtiveBatch\BatchConfig.cs" />
     <Content Include="PrimtiveBatch\Effects\CombineFinal.build.fx">
