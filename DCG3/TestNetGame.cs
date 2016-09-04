@@ -32,6 +32,8 @@ namespace DCG3
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
+
+            _plr = new PlayerNetTest();
         }
 
         public TestNetGame(NetServer server) : base()
@@ -88,8 +90,7 @@ namespace DCG3
                 _plr.Tick(inputCollection);
             } else
             {
-                // ? server stuff?
-                
+                _plr.Tick(inputCollection);
             }
             
             base.Update(gameTime);

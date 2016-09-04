@@ -15,8 +15,13 @@ namespace DCG3
         [STAThread]
         static void Main(string[] args)
         {
-
-            if (args[0] == "server")
+            if (args.Length == 0)
+            {
+                using (var game = new TestNetGame())
+                {
+                    game.Run();
+                }
+            } else if (args[0] == "server")
             {
                 using (var game = new TestNetGame(new NetServer()))
                 {
