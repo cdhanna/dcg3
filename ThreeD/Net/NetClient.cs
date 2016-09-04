@@ -67,6 +67,7 @@ namespace DCG.Framework.Net
             {
                 var line = reader.ReadLine();
                 var state = JsonConvert.DeserializeObject<TState>(line);
+                gameClient.Update(state);
             }
         }
     }
