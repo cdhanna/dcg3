@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DCG3.NetTest
 {
-    class PlayerStateHandler : INetStateHandler
+    class PlayerStateHandler : INetStateHandler<SomeNetState>
     {
         public Player Player { get; set; }
 
@@ -17,9 +17,10 @@ namespace DCG3.NetTest
             Player.Tick(inputs);
         }
 
-        public void SetState()
+        public void SetState(SomeNetState state)
         {
-            
+            Player.Position = state.PlayerPosition;
+            Player.Velocity = state.PlayerVelocity;
         }
     }
 

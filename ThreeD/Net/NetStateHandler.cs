@@ -8,7 +8,7 @@ namespace DCG.Framework.Net
 {
     public interface INetStateHandler<TState> where TState : NetState
     {
-        void SetState(NetState state);
+        void SetState(TState state);
 
         void ApplyInput(InputCollection inputs);
     }
