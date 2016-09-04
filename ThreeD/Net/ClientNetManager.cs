@@ -37,9 +37,6 @@ namespace DCG.Framework.Net
                 _bufferedInputs.PullToHead().ForEach(ic => handler.ApplyInput(ic));
 
             });
-            
         }
-
-
     }
 }

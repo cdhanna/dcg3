@@ -48,7 +48,7 @@ namespace DCG.Framework.Net
                 var success = pendingInputs.TryDequeue(out inputs);
                 if (success)
                 {
-                    writer.WriteLine(JsonConvert.SerializeObject(inputs));
+                    writer.WriteLine(JsonConvert.SerializeObject(inputs, Formatting.None));
                 }
             }
 
@@ -66,7 +66,7 @@ namespace DCG.Framework.Net
             while(true)
             {
                 var line = reader.ReadLine();
-                Console.WriteLine(line);
+                var state = JsonConvert.DeserializeObject<TState>(line);
             }
         }
     }
