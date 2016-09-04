@@ -32,6 +32,8 @@ namespace DCG.Framework.Net
         private Input[] _inputs;
         private int StepNumber { get; set; }
 
+        public int Size { get { return _inputs.Length; } }
+
         public InputCollection(Input[] inputs)
         {
             _inputs = inputs;

@@ -40,8 +40,15 @@ namespace DCG.Framework.Net
             var reader = (StreamReader)objReader;
             while(true)
             {
-                var line = reader.ReadLine();
-                Console.WriteLine(String.Format("{0}:  {1}", Id, line));
+                try
+                {
+                    var line = reader.ReadLine();
+                    Console.WriteLine(String.Format("{0}:  {1}", Id, line));
+                } catch (IOException e)
+                {
+                    Console.WriteLine(e);
+                    break;
+                }
             }
         }
 

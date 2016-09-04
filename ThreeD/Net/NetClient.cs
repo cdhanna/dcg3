@@ -17,6 +17,8 @@ namespace DCG.Framework.Net
         Thread reader;
         Thread writer;
 
+        private int _nextSeqNumber = 0;
+
         ClientNetManager<TState> gameClient;
         ConcurrentQueue<InputCollection> pendingInputs;
 
@@ -56,8 +58,11 @@ namespace DCG.Framework.Net
 
         public void QueueMessage(InputCollection inputs)
         {
-            pendingInputs.Enqueue(inputs);
-            gameClient.BufferInput(inputs);
+            if (inputs.Size > 0)
+            {
+                pendingInputs.Enqueue(inputs);
+                gameClient.BufferInput(inputs);
+            }
         }
 
         private void MessageRecvWorker(object obj)
