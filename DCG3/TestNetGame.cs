@@ -88,6 +88,8 @@ namespace DCG3
             _pBatch.Cube(new RenderArgs()
             {
                 Position = _plr.Position,
+                Rotation = Quaternion.CreateFromRotationMatrix(
+                    Matrix.Identity * Matrix.CreateRotationZ(-_plr.Velocity.X/5f)),
                 Color = Color.Red
             });
 

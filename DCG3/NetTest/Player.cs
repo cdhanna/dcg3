@@ -41,7 +41,7 @@ namespace DCG3.NetTest
 
             ic.Get<MoveInput>().ForEach(i => Velocity += i.TypedValue);
 
-            Velocity += -Velocity * .5f;    // friction
+            Velocity += -Velocity * .6f;    // friction
             Position += Velocity;           // additive motion
 
         }

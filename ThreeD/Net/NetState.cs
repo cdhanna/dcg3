@@ -8,11 +8,11 @@ namespace DCG.Framework.Net
 {
     public abstract class NetState
     {
-        //public uint StepNumber { get; private set; }
+        public int LastAcknowledgedStep { get; private set; }
 
-        //protected NetState()
-        //{
-        //    StepNumber = 0;
-        //}
+        protected NetState()
+        {
+            LastAcknowledgedStep = 0;
+        }
     }
 }
